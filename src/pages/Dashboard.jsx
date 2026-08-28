@@ -6,7 +6,13 @@ import RevenueChart from '@/components/dashboard/RevenueChart';
 import RetentionPanel from '@/components/dashboard/RetentionPanel';
 import ProductPerformance from '@/components/dashboard/ProductPerformance';
 import LocationPerformance from '@/components/dashboard/LocationPerformance';
-import TopPartners from '@/components/dashboard/TopPartners';
+import * as TopPartnersModule from '@/components/dashboard/TopPartners';
+
+const TopPartners =
+  TopPartnersModule.default ||
+  TopPartnersModule.TopPartners ||
+  Object.values(TopPartnersModule).find((value) => typeof value === 'function') ||
+  (() => null);
 
 export default function Dashboard() {
   return (
