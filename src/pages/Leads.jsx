@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { allLeads, currency, num } from '@/lib/mockData';
 import Pagination from '@/components/shared/Pagination';
+import KpiCard from '@/components/shared/KpiCard';
+import MetricGrid from '@/components/shared/MetricGrid';
 import { usePeriod } from '@/lib/PeriodContext';
 import { cn } from '@/lib/utils';
 
@@ -64,60 +66,68 @@ export default function Leads() {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {metrics.map((m) => (
-          <div key={m.label} className="rounded-2xl surface-card p-5">
-            <div className="font-heading text-[26px] font-semibold leading-none text-foreground">{m.value}</div>
-            <div className="mt-2 text-[11px] uppercase tracking-wider text-muted-2">{m.label}</div>
-          </div>
+          <KpiCard key={m.label} label={m.label} value={m.value} />
         ))}
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="font-heading text-[15px] font-semibold text-foreground">Лиды</h3>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-2" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Поиск лида…"
-            className="h-9 w-64 rounded-lg border border-border bg-[hsl(232_26%_7%)] pl-9 pr-3 text-[13px] outline-none focus:border-[hsl(255_100%_68%/0.4)]"
+            className="h-9 w-full rounded-lg border border-border bg-[hsl(232_26%_7%)] pl-9 pr-3 text-[13px] outline-none focus:border-[hsl(255_100%_68%/0.4)] sm:w-64"
           />
         </div>
       </div>
 
       <div className="rounded-2xl surface-card p-2">
-        <table className="w-full border-collapse text-[13px]">
-          <thead>
-            <tr className="border-b border-border">
-              {['Клиент', 'Создан', 'В лидах', 'Сумма', 'Статус'].map((h, i) => (
-                <th key={h} className={cn('px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-muted-2', i >= 2 && i <= 3 && 'text-right')}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {pageRows.map((l) => {
-              const pill = statusPill[l.status];
-              return (
-                <tr key={l.id} className="border-b border-border-soft hover:bg-[hsl(234_22%_11%/0.6)]">
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-foreground">{l.name}</div>
-                    <div className="text-[11px] text-muted-2">{l.handle}</div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{l.createdLabel}</td>
-                  <td className="px-4 py-3 text-right text-muted-foreground">{l.inLeads} дн.</td>
-                  <td className="px-4 py-3 text-right font-medium text-foreground">{currency(l.sum)}</td>
-                  <td className="px-4 py-3">
-                    <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-medium', pill.cls)}>
-                      <span className={cn('h-1.5 w-1.5 rounded-full', pill.dot)} />
-                      {pill.label}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {/* Desktop / tablet table */}
+        <div className="hidden overflow-x-auto scrollbar-thin md:block">
+          <table className="w-full min-w-[640px] border-collapse text-[13px]">
+            <thead>
+              <tr className="border-b border-border">
+                {['Клиент', 'Создан', 'В лидах', 'Сумма', 'Статус'].map((h, i) => (
+                  <th key={h} className={cn('px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-muted-2', i >= 2 && i <= 3 && 'text-right')}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {pageRows.map((l) => {
+                const pill = statusPill[l.status];
+                return (
+                  <tr key={l.id} className="border-b border-border-soft hover:bg-[hsl(234_22%_11%/0.6)]">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-foreground">{l.name}</div>
+                      <div className="text-[11px] text-muted-2">{l.handle}</div>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{l.createdLabel}</td>
+                    <td className="px-4 py-3 text-right text-muted-foreground">{l.inLeads} дн.</td>
+                    <td className="px-4 py-3 text-right font-medium text-foreground">{currency(l.sum)}</td>
+                    <td className="px-4 py-3">
+                      <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-medium', pill.cls)}>
+                        <span className={cn('h-1.5 w-1.5 rounded-full', pill.dot)} />
+                        {pill.label}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile list */}
+        <div className="space-y-2.5 p-1 md:hidden">
+          {pageRows.map((l) => (
+            <LeadMobileRow key={l.id} l={l} />
+          ))}
+        </div>
+
         <Pagination
           page={safePage}
           pageCount={pageCount}
@@ -125,6 +135,31 @@ export default function Leads() {
           pageSize={PAGE_SIZE}
           onPageChange={setPage}
         />
+      </div>
+    </div>
+  );
+}
+
+function LeadMobileRow({ l }) {
+  const pill = statusPill[l.status];
+  return (
+    <div className="rounded-xl border border-border-soft bg-[hsl(232_26%_6%)] p-3.5">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="truncate text-[13px] font-medium text-foreground">{l.name}</div>
+          <div className="truncate text-[11px] text-muted-2">{l.handle}</div>
+        </div>
+        <span className={cn('inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-medium', pill.cls)}>
+          <span className={cn('h-1.5 w-1.5 rounded-full', pill.dot)} />
+          {pill.label}
+        </span>
+      </div>
+      <div className="mt-3 border-t border-border-soft pt-3">
+        <MetricGrid cols={3} items={[
+          { label: 'Создан', value: l.createdLabel },
+          { label: 'В лидах', value: `${l.inLeads} дн.` },
+          { label: 'Сумма', value: currency(l.sum), className: 'text-foreground' },
+        ]} />
       </div>
     </div>
   );

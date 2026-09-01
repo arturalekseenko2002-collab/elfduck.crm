@@ -3,6 +3,7 @@ import { allProducts, productCategories, currency, num } from '@/lib/mockData';
 import Sparkline from '@/components/shared/Sparkline';
 import Delta from '@/components/shared/Delta';
 import Pagination from '@/components/shared/Pagination';
+import ProductMobileRow from '@/components/shared/ProductMobileRow';
 import { usePeriod } from '@/lib/PeriodContext';
 import { cn } from '@/lib/utils';
 
@@ -39,16 +40,16 @@ export default function ProductPerformance() {
 
   return (
     <div className="rounded-2xl surface-card p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="font-heading text-[15px] font-semibold text-foreground">Товары</h3>
-        <div className="flex items-center gap-2">
-          <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-[hsl(232_26%_7%)] p-0.5">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <div className="flex w-full items-center gap-0.5 rounded-lg border border-border bg-[hsl(232_26%_7%)] p-0.5 sm:w-auto">
             {segments.map((s) => (
               <button
                 key={s.key}
                 onClick={() => onSegChange(s.key)}
                 className={cn(
-                  'rounded-md px-2.5 py-1 text-[12px] font-medium transition-all',
+                  'min-w-0 flex-1 whitespace-nowrap rounded-md px-2 py-1.5 text-[11px] font-medium transition-all sm:flex-none sm:px-2.5 sm:py-1 sm:text-[12px]',
                   seg === s.key
                     ? 'bg-[hsl(255_100%_68%/0.14)] text-foreground shadow-[inset_0_0_0_1px_hsl(255_100%_68%/0.22)]'
                     : 'text-muted-foreground hover:text-foreground'
@@ -62,7 +63,7 @@ export default function ProductPerformance() {
             <select
               value={cat}
               onChange={(e) => onCatChange(e.target.value)}
-              className="h-8 rounded-lg border border-border bg-[hsl(232_26%_7%)] px-2.5 text-[12px] text-foreground outline-none focus:border-[hsl(255_100%_68%/0.4)]"
+              className="h-8 w-full rounded-lg border border-border bg-[hsl(232_26%_7%)] px-2.5 text-[12px] text-foreground outline-none focus:border-[hsl(255_100%_68%/0.4)] sm:w-auto"
             >
               {productCategories.map((c) => (
                 <option key={c}>{c}</option>
@@ -72,45 +73,56 @@ export default function ProductPerformance() {
         </div>
       </div>
 
-      <div className="mt-4">
-        <table className="w-full border-collapse text-[13px]">
-          <thead>
-            <tr className="border-b border-border">
-              {['Товар', 'Категория', 'Выручка', 'Продано', 'Динамика', 'Остаток', 'Дн. запаса'].map((h, i) => (
-                <th key={h} className={cn('px-3 py-2.5 text-[11px] font-medium uppercase tracking-wider text-muted-2', i >= 2 && 'text-right')}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {pageRows.map((p) => {
-              const lowStock = p.days <= 2;
-              return (
-                <tr key={p.id} className="border-b border-border-soft hover:bg-[hsl(234_22%_11%/0.6)]">
-                  <td className="px-3 py-3 font-medium text-foreground">{p.name}</td>
-                  <td className="px-3 py-3 text-muted-foreground">{p.category}</td>
-                  <td className="px-3 py-3 text-right font-medium text-foreground">{currency(p.revenue)}</td>
-                  <td className="px-3 py-3 text-right text-muted-foreground">{num(p.sold)} шт.</td>
-                  <td className="px-3 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="w-16"><Sparkline data={p.spark} color={p.trend >= 0 ? 'hsl(255 100% 68%)' : 'hsl(0_72%_58%)'} height={22} /></div>
-                      <Delta value={p.trend} suffix="%" />
-                    </div>
-                  </td>
-                  <td className={cn('px-3 py-3 text-right', lowStock ? 'text-[hsl(36_90%_62%)]' : 'text-muted-foreground')}>{p.stock} шт.</td>
-                  <td className={cn('px-3 py-3 text-right', lowStock ? 'font-medium text-[hsl(36_90%_62%)]' : 'text-muted-foreground')}>{p.days}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <Pagination
-          page={safePage}
-          pageCount={pageCount}
-          total={filtered.length}
-          pageSize={PAGE_SIZE}
-          onPageChange={setPage}
-        />
+      {/* Desktop / tablet table */}
+      <div className="mt-4 hidden md:block">
+        <div className="overflow-x-auto scrollbar-thin">
+          <table className="w-full min-w-[720px] border-collapse text-[13px]">
+            <thead>
+              <tr className="border-b border-border">
+                {['Товар', 'Категория', 'Выручка', 'Продано', 'Динамика', 'Остаток', 'Дн. запаса'].map((h, i) => (
+                  <th key={h} className={cn('px-3 py-2.5 text-[11px] font-medium uppercase tracking-wider text-muted-2', i >= 2 && 'text-right')}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {pageRows.map((p) => {
+                const lowStock = p.days <= 2;
+                return (
+                  <tr key={p.id} className="border-b border-border-soft hover:bg-[hsl(234_22%_11%/0.6)]">
+                    <td className="px-3 py-3 font-medium text-foreground">{p.name}</td>
+                    <td className="px-3 py-3 text-muted-foreground">{p.category}</td>
+                    <td className="px-3 py-3 text-right font-medium text-foreground">{currency(p.revenue)}</td>
+                    <td className="px-3 py-3 text-right text-muted-foreground">{num(p.sold)} шт.</td>
+                    <td className="px-3 py-3">
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="w-16"><Sparkline data={p.spark} color={p.trend >= 0 ? 'hsl(255 100% 68%)' : 'hsl(0_72%_58%)'} height={22} /></div>
+                        <Delta value={p.trend} suffix="%" />
+                      </div>
+                    </td>
+                    <td className={cn('px-3 py-3 text-right', lowStock ? 'text-[hsl(36_90%_62%)]' : 'text-muted-foreground')}>{p.stock} шт.</td>
+                    <td className={cn('px-3 py-3 text-right', lowStock ? 'font-medium text-[hsl(36_90%_62%)]' : 'text-muted-foreground')}>{p.days}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* Mobile list */}
+      <div className="mt-4 space-y-2.5 md:hidden">
+        {pageRows.map((p) => (
+          <ProductMobileRow key={p.id} p={p} />
+        ))}
+      </div>
+
+      <Pagination
+        page={safePage}
+        pageCount={pageCount}
+        total={filtered.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

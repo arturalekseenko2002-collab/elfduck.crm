@@ -20,7 +20,7 @@ const map = {
 export default function Badge({ status, label, className }) {
   const cfg = map[status] || { label: label || status, cls: 'bg-[hsl(228_12%_30%/0.2)] text-[hsl(228_12%_70%)] border-[hsl(228_12%_30%/0.3)]' };
   return (
-    <span className={cn('inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium', cfg.cls, className)}>
+    <span className={cn('inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium leading-none whitespace-nowrap', cfg.cls, className)}>
       {cfg.label}
     </span>
   );

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopHeader from './TopHeader';
+import MobileNav from './MobileNav';
 
 const meta = {
   '/': { title: 'Дашборд', subtitle: 'Обзор бизнеса ElfDuck за период' },
@@ -18,13 +19,18 @@ const meta = {
 export default function AppShell() {
   const loc = useLocation();
   const m = meta[loc.pathname] || { title: 'ElfDuck', subtitle: '' };
+  const [navOpen, setNavOpen] = useState(false);
+
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="flex h-screen w-full overflow-hidden">
       <Sidebar />
+      <MobileNav open={navOpen} onClose={() => setNavOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopHeader title={m.title} subtitle={m.subtitle} />
-        <main className="flex-1 overflow-y-auto scrollbar-thin px-7 py-6">
-          <Outlet />
+        <TopHeader title={m.title} subtitle={m.subtitle} onMenu={() => setNavOpen(true)} />
+        <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin px-4 py-4 sm:px-6 lg:px-7 lg:py-6">
+          <div className="min-w-0">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

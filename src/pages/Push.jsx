@@ -4,12 +4,40 @@ import { pushCampaigns, pushTemplates, pushAudienceOptions, currency, num } from
 import DataTable from '@/components/shared/DataTable';
 import Badge from '@/components/shared/Badge';
 import Pagination from '@/components/shared/Pagination';
+import MetricGrid from '@/components/shared/MetricGrid';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
 import { usePeriod } from '@/lib/PeriodContext';
 import { cn } from '@/lib/utils';
 
 const TPL_PAGE_SIZE = 5;
+
+function CampaignMobileRow({ r }) {
+  return (
+    <div className="rounded-xl border border-border-soft bg-[hsl(232_26%_6%)] p-3.5">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="truncate text-[13px] font-medium text-foreground">{r.name}</div>
+          <div className="text-[11px] text-muted-2">Аудитория: {r.audience}</div>
+        </div>
+        <Badge status={r.status} />
+      </div>
+      <div className="mt-3 border-t border-border-soft pt-3">
+        <MetricGrid cols={3} items={[
+          { label: 'Получателей', value: num(r.sent) },
+          { label: 'Доставлено', value: num(r.delivered) },
+          { label: 'Покупки', value: r.purchases },
+        ]} />
+        <div className="mt-2.5">
+          <MetricGrid cols={2} items={[
+            { label: 'Конверсия', value: `${r.conversion}%`, className: 'text-[hsl(255_100%_72%)]' },
+            { label: 'Выручка', value: currency(r.revenue), className: 'text-foreground' },
+          ]} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Push() {
   const [audience, setAudience] = useState('Все');
@@ -109,7 +137,7 @@ export default function Push() {
   return (
     <div className="space-y-5">
       {/* Row 1 — Audience / Message / Preview (equal height) */}
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* Audience */}
         <div className="flex h-full flex-col rounded-2xl surface-card p-5">
           <div className="flex items-center justify-between">
@@ -258,7 +286,14 @@ export default function Push() {
       {/* Row 3 — Campaign effectiveness */}
       <div className="rounded-2xl surface-card p-2">
         <div className="px-4 py-3 text-[13px] font-medium text-foreground">Эффективность рассылок</div>
-        <DataTable columns={analyticsColumns} rows={campRows} dense />
+        <div className="hidden md:block">
+          <DataTable columns={analyticsColumns} rows={campRows} dense />
+        </div>
+        <div className="space-y-2.5 p-1 md:hidden">
+          {campRows.map((r) => (
+            <CampaignMobileRow key={r.id} r={r} />
+          ))}
+        </div>
         <Pagination
           page={safeCampPage}
           pageCount={campPageCount}
@@ -270,7 +305,7 @@ export default function Push() {
 
       {/* Create template modal */}
       <Dialog open={tplModalOpen} onOpenChange={setTplModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[calc(100%-1.5rem)]">
           <DialogHeader>
             <DialogTitle>Новый шаблон</DialogTitle>
           </DialogHeader>

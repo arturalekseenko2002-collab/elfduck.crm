@@ -4,6 +4,7 @@ import { allPartners, allCustomers, allLeads, currency, num } from '@/lib/mockDa
 import DataTable from '@/components/shared/DataTable';
 import Delta from '@/components/shared/Delta';
 import Pagination from '@/components/shared/Pagination';
+import PartnerMobileRow from '@/components/shared/PartnerMobileRow';
 import { usePeriod } from '@/lib/PeriodContext';
 import { toast } from '@/components/ui/use-toast';
 
@@ -89,18 +90,18 @@ export default function Partners() {
       <div className="rounded-2xl surface-card p-5">
         <h3 className="font-heading text-[15px] font-semibold text-foreground">Добавить партнёра</h3>
         <p className="mt-0.5 text-[12px] text-muted-foreground">Назначить пользователя партнёром по Telegram username</p>
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && assign()}
             placeholder="@username"
-            className="input-base h-10 max-w-xs"
+            className="input-base h-10 w-full sm:max-w-xs"
           />
           <button
             onClick={assign}
             disabled={loading || !username.trim()}
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[hsl(255_100%_68%)] to-[hsl(280_90%_60%)] px-4 py-2.5 text-[13px] font-medium text-white shadow-[0_4px_20px_-6px_hsl(255_100%_68%)] disabled:opacity-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[hsl(255_100%_68%)] to-[hsl(280_90%_60%)] px-4 py-2.5 text-[13px] font-medium text-white shadow-[0_4px_20px_-6px_hsl(255_100%_68%)] disabled:opacity-50 sm:w-auto"
           >
             {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
             Назначить партнёром
@@ -108,21 +109,28 @@ export default function Partners() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-[12px] text-muted-2">Найдено: {filtered.length}</div>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-2" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Поиск партнёра…"
-            className="h-9 w-64 rounded-lg border border-border bg-[hsl(232_26%_7%)] pl-9 pr-3 text-[13px] outline-none focus:border-[hsl(255_100%_68%/0.4)]"
+            className="h-9 w-full rounded-lg border border-border bg-[hsl(232_26%_7%)] pl-9 pr-3 text-[13px] outline-none focus:border-[hsl(255_100%_68%/0.4)] sm:w-64"
           />
         </div>
       </div>
 
       <div className="rounded-2xl surface-card p-2">
-        <DataTable columns={columns} rows={pageRows} dense />
+        <div className="hidden md:block">
+          <DataTable columns={columns} rows={pageRows} dense />
+        </div>
+        <div className="space-y-2.5 p-1 md:hidden">
+          {pageRows.map((r) => (
+            <PartnerMobileRow key={r.id} p={r} showName showTrend showLtv />
+          ))}
+        </div>
         <Pagination
           page={safePage}
           pageCount={pageCount}

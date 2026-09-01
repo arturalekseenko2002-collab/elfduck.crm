@@ -4,6 +4,8 @@ import DataTable from '@/components/shared/DataTable';
 import Sparkline from '@/components/shared/Sparkline';
 import Delta from '@/components/shared/Delta';
 import Pagination from '@/components/shared/Pagination';
+import KpiCard from '@/components/shared/KpiCard';
+import ProductMobileRow from '@/components/shared/ProductMobileRow';
 import { usePeriod } from '@/lib/PeriodContext';
 import { cn } from '@/lib/utils';
 
@@ -58,20 +60,21 @@ export default function Products() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center gap-6">
-        {summary.map((s, i) => (
-          <div key={s.label} className="flex items-center gap-6">
-            {i > 0 && <span className="h-8 w-px bg-border" />}
-            <div>
-              <div className="font-heading text-[20px] font-semibold leading-none text-foreground">{s.value}</div>
-              <div className="mt-1 text-[11px] uppercase tracking-wider text-muted-2">{s.label}</div>
-            </div>
-          </div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        {summary.map((s) => (
+          <KpiCard key={s.label} label={s.label} value={s.value} />
         ))}
       </div>
 
       <div className="rounded-2xl surface-card p-2">
-        <DataTable columns={columns} rows={pageRows} dense />
+        <div className="hidden md:block">
+          <DataTable columns={columns} rows={pageRows} dense />
+        </div>
+        <div className="space-y-2.5 p-1 md:hidden">
+          {pageRows.map((p) => (
+            <ProductMobileRow key={p.id} p={p} />
+          ))}
+        </div>
         <Pagination
           page={safePage}
           pageCount={pageCount}

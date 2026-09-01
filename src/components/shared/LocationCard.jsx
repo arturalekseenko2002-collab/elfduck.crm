@@ -8,7 +8,7 @@ function Trend({ value, goodPositive }) {
   const positive = value >= 0;
   const good = goodPositive ? positive : !positive;
   return (
-    <span className={cn('inline-flex items-center gap-1 text-[13px] font-medium', good ? 'text-[hsl(142_70%_58%)]' : 'text-[hsl(0_72%_62%)]')}>
+    <span className={cn('inline-flex items-center gap-1 text-[13px] font-medium tabular-nums', good ? 'text-[hsl(142_70%_58%)]' : 'text-[hsl(0_72%_62%)]')}>
       {positive ? '↑' : '↓'} {Math.abs(value)}%
     </span>
   );
@@ -24,10 +24,10 @@ export default function LocationCard({ metric, location, days }) {
         <span className="text-[14px] font-semibold text-foreground">{location.name}</span>
         <Trend value={cfg.trend(location)} goodPositive={cfg.goodPositive} />
       </div>
-      <div className="mt-2 font-heading text-[24px] font-semibold leading-none text-foreground">{cfg.primary(view)}</div>
-      <div className="mt-1 text-[11px] uppercase tracking-wider text-muted-2">{cfg.label}</div>
+      <div className="mt-2 font-heading text-[24px] font-semibold leading-none tabular-nums text-foreground">{cfg.primary(view)}</div>
+      <div className="mt-1 text-[11px] uppercase tracking-[0.06em] text-muted-2">{cfg.label}</div>
       <div className="mt-3 h-10"><Sparkline data={cfg.chart(location)} color={chartColor} area height={40} /></div>
-      <div className="mt-4 grid grid-cols-3 gap-y-2 text-[12px]">
+      <div className="mt-4 grid grid-cols-3 gap-y-2 text-[12px] tabular-nums">
         <span className="text-muted-2">{num(view.orders)} заказов</span>
         <span className="text-center text-muted-2">{view.avgCheck} zł чек</span>
         <span className="text-right text-muted-2">{view.cancel}% отмен</span>

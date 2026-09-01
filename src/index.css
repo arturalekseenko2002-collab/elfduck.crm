@@ -40,9 +40,9 @@
     --destructive: 0 72% 58%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 234 18% 16%;
-    --border-soft: 234 16% 14%;
-    --input: 234 18% 16%;
+    --border: 234 18% 15%;
+    --border-soft: 234 16% 11%;
+    --input: 234 18% 15%;
     --ring: 255 100% 68%;
 
     --radius: 0.75rem;
@@ -65,24 +65,40 @@
     @apply bg-background text-foreground font-body antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+  /* Premium graphite grain — deepest background layer only */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  @media (max-width: 767px) {
+    body::before { opacity: 0.025; }
+  }
 }
 
 @layer utilities {
   .surface-card {
     background: hsl(var(--card));
     border: 1px solid hsl(var(--border));
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.14);
   }
   .surface-elevated {
     background: hsl(var(--card-2));
     border: 1px solid hsl(var(--border));
+    box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.2);
   }
   .glow-primary {
-    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.18), 0 8px 40px -12px hsl(var(--primary) / 0.45);
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.16), 0 6px 28px -10px hsl(var(--primary) / 0.38);
   }
   .text-muted-2 { color: hsl(var(--muted-2)); }
   .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
   .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 999px; }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .input-base {
     width: 100%;
@@ -95,7 +111,8 @@
     outline: none;
   }
   .input-base:focus {
-    border-color: hsl(255 100% 68% / 0.4);
+    border-color: hsl(255 100% 68% / 0.45);
+    box-shadow: 0 0 0 3px hsl(255 100% 68% / 0.08);
   }
   .input-base::placeholder { color: hsl(var(--muted-2)); }
 }

@@ -4,6 +4,8 @@ import { allCustomers, currency } from '@/lib/mockData';
 import DataTable from '@/components/shared/DataTable';
 import Badge from '@/components/shared/Badge';
 import Pagination from '@/components/shared/Pagination';
+import KpiCard from '@/components/shared/KpiCard';
+import MetricGrid from '@/components/shared/MetricGrid';
 import { usePeriod } from '@/lib/PeriodContext';
 import { cn } from '@/lib/utils';
 
@@ -19,7 +21,7 @@ const PAGE_SIZE = 50;
 function Avatar({ name }) {
   const initials = name.split(' ').map((p) => p[0]).slice(0, 2).join('');
   return (
-    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(234_22%_18%)] to-[hsl(234_22%_10%)] text-[11px] font-semibold text-foreground">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(234_22%_18%)] to-[hsl(234_22%_10%)] text-[11px] font-semibold text-foreground">
       {initials}
     </div>
   );
@@ -47,10 +49,10 @@ export default function Customers() {
     const topLtv = Math.max(...allCustomers.map((c) => c.ltv));
     const avgCheck = Math.round(allCustomers.reduce((a, c) => a + c.avgCheck, 0) / allCustomers.length);
     return [
-      { label: 'клиентов', value: '284' },
-      { label: 'активных', value: String(active) },
-      { label: 'top LTV', value: currency(topLtv) },
-      { label: 'средний чек', value: `${avgCheck} zł` },
+      { label: 'Клиентов', value: '284' },
+      { label: 'Активных', value: String(active) },
+      { label: 'Top LTV', value: currency(topLtv) },
+      { label: 'Средний чек', value: `${avgCheck} zł` },
     ];
   }, []);
 
@@ -82,37 +84,20 @@ export default function Customers() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-6">
-          {summary.map((s, i) => (
-            <div key={s.label} className="flex items-center gap-6">
-              {i > 0 && <span className="h-8 w-px bg-border" />}
-              <div>
-                <div className="font-heading text-[20px] font-semibold leading-none text-foreground">{s.value}</div>
-                <div className="mt-1 text-[11px] uppercase tracking-wider text-muted-2">{s.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-2" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Поиск клиента…"
-            className="h-9 w-64 rounded-lg border border-border bg-[hsl(232_26%_7%)] pl-9 pr-3 text-[13px] outline-none focus:border-[hsl(255_100%_68%/0.4)]"
-          />
-        </div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {summary.map((s) => (
+          <KpiCard key={s.label} label={s.label} value={s.value} />
+        ))}
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-[hsl(232_26%_7%)] p-0.5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-lg border border-border bg-[hsl(232_26%_7%)] p-0.5 no-scrollbar">
           {statusFilters.map((s) => (
             <button
               key={s.key}
               onClick={() => setStatus(s.key)}
               className={cn(
-                'rounded-md px-3 py-1.5 text-[12px] font-medium transition-all',
+                'shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-[12px] font-medium transition-all',
                 status === s.key
                   ? 'bg-[hsl(255_100%_68%/0.14)] text-foreground shadow-[inset_0_0_0_1px_hsl(255_100%_68%/0.22)]'
                   : 'text-muted-foreground hover:text-foreground'
@@ -122,11 +107,26 @@ export default function Customers() {
             </button>
           ))}
         </div>
-        <div className="text-[12px] text-muted-2">Найдено: {filtered.length}</div>
+        <div className="relative w-full sm:w-auto">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-2" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Поиск клиента…"
+            className="h-9 w-full rounded-lg border border-border bg-[hsl(232_26%_7%)] pl-9 pr-3 text-[13px] outline-none focus:border-[hsl(255_100%_68%/0.4)] sm:w-64"
+          />
+        </div>
       </div>
 
       <div className="rounded-2xl surface-card p-2">
-        <DataTable columns={columns} rows={pageRows} dense />
+        <div className="hidden md:block">
+          <DataTable columns={columns} rows={pageRows} dense />
+        </div>
+        <div className="space-y-2.5 p-1 md:hidden">
+          {pageRows.map((r) => (
+            <CustomerMobileRow key={r.id} r={r} />
+          ))}
+        </div>
         <Pagination
           page={safePage}
           pageCount={pageCount}
@@ -134,6 +134,36 @@ export default function Customers() {
           pageSize={PAGE_SIZE}
           onPageChange={setPage}
         />
+      </div>
+    </div>
+  );
+}
+
+function CustomerMobileRow({ r }) {
+  return (
+    <div className="rounded-xl border border-border-soft bg-[hsl(232_26%_6%)] p-3.5">
+      <div className="flex items-center gap-3">
+        <Avatar name={r.name} />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[13px] font-medium text-foreground">{r.name}</div>
+          <div className="truncate text-[11px] text-muted-2">{r.handle}</div>
+        </div>
+        <Badge status={statusMap[r.status]} />
+      </div>
+      <div className="mt-3 border-t border-border-soft pt-3">
+        <MetricGrid cols={3} items={[
+          { label: 'LTV', value: currency(r.ltv), className: 'text-foreground' },
+          { label: 'Покупки', value: r.purchases },
+          { label: 'Ср. чек', value: `${r.avgCheck} zł` },
+        ]} />
+        <div className="mt-2.5">
+          <MetricGrid cols={3} items={[
+            { label: 'Период', value: r.interval ? `${r.interval} дн.` : '—' },
+            { label: 'Кэшбэк', value: `${r.cashback} zł`, className: 'text-[hsl(255_100%_72%)]' },
+            { label: 'Последний', value: r.lastOrder },
+          ]} />
+        </div>
+        <div className="mt-2 text-[11px] text-muted-2">Сегмент: <span className="text-muted-foreground">{r.segment}</span></div>
       </div>
     </div>
   );

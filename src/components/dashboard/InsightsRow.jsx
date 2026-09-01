@@ -18,7 +18,7 @@ export default function InsightsRow() {
         <h3 className="font-heading text-[15px] font-semibold text-foreground">ElfDuck Insights</h3>
         <span className="text-[12px] text-muted-foreground">Важное за выбранный период</span>
       </div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {insights.map((it) => {
           const tone = toneMap[it.tone];
           const Icon = iconMap[it.icon];
@@ -31,7 +31,7 @@ export default function InsightsRow() {
                 </div>
                 <div className="mt-3 text-[13px] font-semibold leading-snug text-foreground">{it.title}</div>
                 <div className="mt-1 text-[12px] text-muted-foreground">{it.line}</div>
-                <div className={cn('mt-3 text-[12px] font-medium', tone.icon)}>{it.metric}</div>
+                <div className={cn('mt-3 text-[12px] font-medium tabular-nums', tone.icon)}>{it.metric}</div>
               </div>
             </div>
           );

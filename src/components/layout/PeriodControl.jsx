@@ -25,14 +25,14 @@ export default function PeriodControl() {
   };
 
   return (
-    <div className="relative">
-      <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-[hsl(232_26%_7%)] p-0.5">
+    <div className="relative w-full lg:w-auto">
+      <div className="flex max-w-full items-center gap-0.5 overflow-x-auto rounded-lg border border-border bg-[hsl(232_26%_7%)] p-0.5 no-scrollbar lg:overflow-visible">
         {periodOptions.map((p) => (
           <button
             key={p}
             onClick={() => setPeriod(p)}
             className={cn(
-              'rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-all',
+              'shrink-0 whitespace-nowrap rounded-md px-2 py-1.5 text-[11px] font-medium transition-all sm:px-2.5 sm:py-1.5 sm:text-[12px]',
               period === p
                 ? 'bg-[hsl(255_100%_68%/0.14)] text-foreground shadow-[inset_0_0_0_1px_hsl(255_100%_68%/0.22)]'
                 : 'text-muted-foreground hover:text-foreground'
@@ -44,28 +44,28 @@ export default function PeriodControl() {
       </div>
 
       {period === 'Свой период' && (
-        <div className="absolute right-0 top-full z-30 mt-2 w-[372px] rounded-xl border border-border bg-[hsl(232_26%_8%)] p-3 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.85)]">
-          <div className="flex items-center gap-2">
+        <div className="absolute right-0 top-full z-30 mt-2 w-[340px] max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-[hsl(232_26%_8%)] p-3 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.85)]">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
               type="date"
               value={draftStart}
               onChange={(e) => setDraftStart(e.target.value)}
               style={{ colorScheme: 'dark' }}
-              className="input-base flex-1"
+              className="input-base min-w-0 flex-1"
             />
-            <span className="text-muted-2">—</span>
+            <span className="hidden text-muted-2 sm:inline">—</span>
             <input
               type="date"
               value={draftEnd}
               onChange={(e) => setDraftEnd(e.target.value)}
               style={{ colorScheme: 'dark' }}
-              className="input-base flex-1"
+              className="input-base min-w-0 flex-1"
             />
           </div>
           <div className="mt-3 flex items-center justify-end gap-2">
             <button
               onClick={closeCustom}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground"
               title="Закрыть"
             >
               <X className="h-4 w-4" />

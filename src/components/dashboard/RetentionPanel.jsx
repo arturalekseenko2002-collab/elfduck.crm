@@ -9,7 +9,7 @@ export default function RetentionPanel() {
       <h3 className="font-heading text-[15px] font-semibold text-foreground">Повторные покупки</h3>
       <p className="mt-0.5 text-[12px] text-muted-foreground">Удержание клиентов</p>
 
-      <div className="relative mt-2 h-[150px]">
+      <div className="relative mt-2 h-[150px] min-w-0">
         <ResponsiveContainer width="100%" height="100%">
           <RadialBarChart innerRadius="72%" outerRadius="100%" data={data} startAngle={90} endAngle={-270}>
             <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
@@ -17,7 +17,7 @@ export default function RetentionPanel() {
           </RadialBarChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-heading text-[30px] font-semibold leading-none text-foreground">{retention.rate}%</span>
+          <span className="font-heading text-[30px] font-semibold leading-none tabular-nums text-foreground">{retention.rate}%</span>
           <span className="mt-1 text-[12px] font-medium text-[hsl(142_70%_55%)]">+{retention.delta} п.п.</span>
         </div>
       </div>
@@ -36,7 +36,7 @@ function Row({ label, value, accent }) {
   return (
     <div className="flex items-center justify-between text-[12px]">
       <span className="text-muted-foreground">{label}</span>
-      <span className={accent ? 'font-medium text-[hsl(255_100%_72%)]' : 'font-medium text-foreground'}>{value}</span>
+      <span className={accent ? 'font-medium tabular-nums text-[hsl(255_100%_72%)]' : 'font-medium tabular-nums text-foreground'}>{value}</span>
     </div>
   );
 }

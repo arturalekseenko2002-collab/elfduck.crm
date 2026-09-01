@@ -1,44 +1,12 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import {
-  LayoutDashboard, ShoppingCart, Users, UserPlus, Handshake, Gift, Send,
-  Package, MapPin, Sparkles
-} from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const groups = [
-  {
-    label: 'Главное',
-    items: [{ to: '/', label: 'Дашборд', icon: LayoutDashboard, end: true }],
-  },
-  {
-    label: 'Продажи',
-    items: [
-      { to: '/sales/orders', label: 'Заказы', icon: ShoppingCart },
-      { to: '/sales/customers', label: 'Клиенты', icon: Users },
-      { to: '/sales/leads', label: 'Лиды', icon: UserPlus },
-    ],
-  },
-  {
-    label: 'Маркетинг',
-    items: [
-      { to: '/marketing/partners', label: 'Партнёры', icon: Handshake },
-      { to: '/marketing/cashback', label: 'Кэшбэк', icon: Gift },
-      { to: '/marketing/push', label: 'Push-рассылки', icon: Send },
-    ],
-  },
-  {
-    label: 'Аналитика',
-    items: [
-      { to: '/analytics/products', label: 'Товары', icon: Package },
-      { to: '/analytics/locations', label: 'Точки', icon: MapPin },
-    ],
-  },
-];
+import { groups } from '@/lib/navConfig';
 
 export default function Sidebar() {
   return (
-    <aside className="flex h-full w-[236px] shrink-0 flex-col border-r border-border bg-[hsl(232_28%_5%)]">
+    <aside className="hidden h-full w-[236px] shrink-0 flex-col border-r border-border bg-[hsl(232_28%_5%)] lg:flex">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-5">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(255_100%_68%)] to-[hsl(280_90%_60%)] glow-primary">
@@ -77,7 +45,7 @@ export default function Sidebar() {
                         className={cn('h-4 w-4 shrink-0', isActive ? 'text-[hsl(255_100%_72%)]' : 'text-muted-2 group-hover:text-muted-foreground')}
                       />
                       <span className="font-medium">{it.label}</span>
-                      {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[hsl(255_100%_72%)] shadow-[0_0_8px_hsl(255_100%_72%)]" />}
+                      {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[hsl(255_100%_72%)]" />}
                     </>
                   )}
                 </NavLink>

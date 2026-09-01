@@ -1,7 +1,6 @@
 import React from 'react';
-import { kpis, currency, num } from '@/lib/mockData';
-import Sparkline from '@/components/shared/Sparkline';
-import Delta from '@/components/shared/Delta';
+import { kpis, num } from '@/lib/mockData';
+import KpiCard from '@/components/shared/KpiCard';
 
 const cards = [
   { key: 'orders', label: 'Заказы', fmt: (v) => num(v), spark: kpis.orders.series, color: 'hsl(255 100% 68%)' },
@@ -14,22 +13,20 @@ const cards = [
 
 export default function KpiGrid() {
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
       {cards.map((c) => {
         const k = kpis[c.key];
         return (
-          <div key={c.key} className="rounded-2xl surface-card p-4 transition-colors hover:border-[hsl(255_100%_68%/0.25)]">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-2">{c.label}</span>
-              <Delta value={c.invert ? -Math.abs(k.delta) : k.delta} suffix={c.suffix} />
-            </div>
-            <div className="mt-2 font-heading text-[26px] font-semibold leading-none tracking-tight text-foreground">
-              {c.fmt(k.value)}
-            </div>
-            <div className="mt-3 h-8">
-              <Sparkline data={c.spark} color={c.color} area />
-            </div>
-          </div>
+          <KpiCard
+            key={c.key}
+            label={c.label}
+            value={c.fmt(k.value)}
+            delta={k.delta}
+            series={c.spark}
+            color={c.color}
+            suffix={c.suffix}
+            invert={c.invert}
+          />
         );
       })}
     </div>

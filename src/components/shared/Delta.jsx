@@ -7,7 +7,7 @@ export default function Delta({ value, suffix = '', className }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 text-[12px] font-medium',
+        'inline-flex items-center gap-1 text-[12px] font-medium tabular-nums',
         up ? 'text-[hsl(142_70%_55%)]' : 'text-[hsl(0_80%_66%)]',
         className
       )}
