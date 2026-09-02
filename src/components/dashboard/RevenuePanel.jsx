@@ -118,6 +118,40 @@ export default function RevenuePanel({
 
       ).filter(Boolean);
 
+const renderXAxisTick = ({
+  x,
+  y,
+  payload,
+  index,
+}) => {
+  const isFirst =
+    index === 0;
+
+  const isLast =
+    index ===
+    xTicks.length - 1;
+
+  return (
+    <text
+      x={x}
+      y={y + 12}
+      fill="hsl(228 10% 44%)"
+      fontSize={10}
+      textAnchor={
+        isFirst
+          ? 'start'
+          : isLast
+            ? 'end'
+            : 'middle'
+      }
+    >
+      {formatChartDate(
+        payload.value
+      )}
+    </text>
+  );
+};
+
   return (
     <div className="relative overflow-hidden rounded-2xl surface-card p-6">
       <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[hsl(255_100%_68%/0.08)] blur-3xl" />
@@ -197,33 +231,16 @@ export default function RevenuePanel({
               </defs>
 
               <XAxis
-
                 dataKey="date"
-
                 ticks={xTicks}
-
-                tickFormatter={
-
-                  formatChartDate
-
-                }
-
-                tick={{
-
-                  fill:
-
-                    'hsl(228 10% 44%)',
-
-                  fontSize: 10,
-
-                }}
-
+                tick={renderXAxisTick}
                 axisLine={false}
-
                 tickLine={false}
-
                 interval={0}
-
+                padding={{
+                  left: 0,
+                  right: 0,
+                }}
               />
 
               <YAxis

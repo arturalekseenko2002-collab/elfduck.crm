@@ -119,6 +119,40 @@ export default function RevenueChart({
         }
       ).filter(Boolean);
 
+      const renderXAxisTick = ({
+  x,
+  y,
+  payload,
+  index,
+}) => {
+  const isFirst =
+    index === 0;
+
+  const isLast =
+    index ===
+    xTicks.length - 1;
+
+  return (
+    <text
+      x={x}
+      y={y + 12}
+      fill="hsl(228 10% 44%)"
+      fontSize={11}
+      textAnchor={
+        isFirst
+          ? 'start'
+          : isLast
+            ? 'end'
+            : 'middle'
+      }
+    >
+      {formatChartDate(
+        payload.value
+      )}
+    </text>
+  );
+};
+
   return (
     <div className="rounded-2xl surface-card p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -210,27 +244,21 @@ export default function RevenueChart({
 
                 ticks={xTicks}
 
-                tickFormatter={
-
-                  formatChartDate
-
-                }
-
-                tick={{
-
-                  fill:
-
-                    'hsl(228 10% 44%)',
-
-                  fontSize: 11,
-
-                }}
+                tick={renderXAxisTick}
 
                 axisLine={false}
 
                 tickLine={false}
 
                 interval={0}
+
+                padding={{
+
+                  left: 0,
+
+                  right: 0,
+
+                }}
 
               />
 
