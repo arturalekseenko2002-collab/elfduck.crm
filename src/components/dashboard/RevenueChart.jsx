@@ -1,5 +1,9 @@
 import React, {
+
+  useEffect,
+
   useState,
+
 } from 'react';
 
 import {
@@ -99,59 +103,96 @@ export default function RevenueChart({
       (item) =>
         item.key === tab
     ) || tabs[0];
+
+  const [isMobile, setIsMobile] =
+    useState(
+      typeof window !== 'undefined'
+        ? window.innerWidth < 640
+        : false
+    );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(
+        window.innerWidth < 640
+      );
+    };
+
+    handleResize();
+
+    window.addEventListener(
+      'resize',
+      handleResize
+    );
+
+    return () => {
+      window.removeEventListener(
+        'resize',
+        handleResize
+      );
+    };
+  }, []);
+
+  const tickCount =
+    isMobile ? 5 : 8;
   
   const xTicks =
-  data.length <= 8
-    ? data.map(
-        (item) => item.date
-      )
-    : Array.from(
-        { length: 8 },
-        (_, i) => {
-          const index =
-            Math.round(
-              ((data.length - 1) *
-                i) /
-                7
-            );
+    data.length <= tickCount
+      ? data.map(
+          (item) => item.date
+        )
+      : Array.from(
+          {
+            length:
+              tickCount,
+          },
+          (_, i) => {
+            const index =
+              Math.round(
+                ((data.length - 1) *
+                  i) /
+                  (tickCount - 1)
+              );
 
-          return data[index]?.date;
-        }
-      ).filter(Boolean);
+            return data[index]?.date;
+          }
+        ).filter(Boolean);
 
-      const renderXAxisTick = ({
-  x,
-  y,
-  payload,
-  index,
-}) => {
-  const isFirst =
-    index === 0;
+    const renderXAxisTick = ({
+      x,
+      y,
+      payload,
+      index,
+    }) => {
+      const isFirst =
+        index === 0;
 
-  const isLast =
-    index ===
-    xTicks.length - 1;
+      const isLast =
+        index ===
+        xTicks.length - 1;
 
-  return (
-    <text
-      x={x}
-      y={y + 12}
-      fill="hsl(228 10% 44%)"
-      fontSize={11}
-      textAnchor={
-        isFirst
-          ? 'start'
-          : isLast
-            ? 'end'
-            : 'middle'
-      }
-    >
-      {formatChartDate(
-        payload.value
-      )}
-    </text>
-  );
-};
+      return (
+        <text
+          x={x}
+          y={y + 12}
+          fill="hsl(228 10% 44%)"
+          fontSize={
+            isMobile ? 10 : 11
+          }
+          textAnchor={
+            isFirst
+              ? 'start'
+              : isLast
+                ? 'end'
+                : 'middle'
+          }
+        >
+          {formatChartDate(
+            payload.value
+          )}
+        </text>
+      );
+    };
 
   return (
     <div className="rounded-2xl surface-card p-6">
