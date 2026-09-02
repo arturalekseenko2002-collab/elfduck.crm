@@ -1,34 +1,237 @@
 import React from 'react';
-import { kpis, num } from '@/lib/mockData';
 import KpiCard from '@/components/shared/KpiCard';
 
-const cards = [
-  { key: 'orders', label: 'Заказы', fmt: (v) => num(v), spark: kpis.orders.series, color: 'hsl(255 100% 68%)' },
-  { key: 'avgCheck', label: 'Средний чек', fmt: (v) => `${v} zł`, spark: kpis.avgCheck.series, color: 'hsl(214 84% 60%)' },
-  { key: 'customers', label: 'Клиенты', fmt: (v) => num(v), spark: kpis.customers.series, color: 'hsl(142 64% 47%)' },
-  { key: 'repeat', label: 'Повторные покупки', fmt: (v) => `${v}%`, spark: kpis.repeat.series, color: 'hsl(255 100% 68%)', suffix: ' п.п.' },
-  { key: 'cancel', label: 'Отмены', fmt: (v) => `${v}%`, spark: kpis.cancel.series, color: 'hsl(0 72% 58%)', invert: true },
-  { key: 'newCustomers', label: 'Новые клиенты', fmt: (v) => `${v}%`, spark: kpis.newCustomers.series, color: 'hsl(214 84% 60%)' },
-];
+const numberFormatter =
+  new Intl.NumberFormat('pl-PL');
 
-export default function KpiGrid() {
+const moneyFormatter =
+  new Intl.NumberFormat(
+    'pl-PL',
+    {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }
+  );
+
+function num(value) {
+  return numberFormatter.format(
+    Number(value || 0)
+  );
+}
+
+function money(value) {
+  return `${moneyFormatter.format(
+    Number(value || 0)
+  )} zł`;
+}
+
+export default function KpiGrid({
+  data,
+  series = [],
+  loading = false,
+}) {
+  const ordersSeries =
+    series.map(
+      (row) =>
+        Number(row.orders || 0)
+    );
+
+  const avgCheckSeries =
+    series.map((row) => {
+      const orders =
+        Number(row.orders || 0);
+
+      if (!orders) {
+        return 0;
+      }
+
+      return Number(
+        (
+          Number(
+            row.revenue || 0
+          ) / orders
+        ).toFixed(2)
+      );
+    });
+
+  const customersSeries =
+    series.map(
+      (row) =>
+        Number(
+          row.newCustomers || 0
+        ) +
+        Number(
+          row.repeatCustomers || 0
+        )
+    );
+
+  const repeatSeries =
+    series.map(
+      (row) =>
+        Number(
+          row.repeatCustomers || 0
+        )
+    );
+
+  const newCustomersSeries =
+    series.map(
+      (row) =>
+        Number(
+          row.newCustomers || 0
+        )
+    );
+
+  /*
+   * Отмены пока отсутствуют
+   * в businessDynamics по дням,
+   * поэтому для sparkline используем
+   * пустой массив.
+   */
+  const cancelSeries = [];
+
+  const cards = [
+    {
+      key: 'orders',
+      label: 'Заказы',
+      value:
+        data?.orders?.value,
+      delta:
+        data?.orders
+          ?.changePercent,
+      fmt: num,
+      spark:
+        ordersSeries,
+      color:
+        'hsl(255 100% 68%)',
+    },
+
+    {
+      key: 'avgCheck',
+      label: 'Средний чек',
+      value:
+        data?.averageCheck
+          ?.value,
+      delta:
+        data?.averageCheck
+          ?.changePercent,
+      fmt: money,
+      spark:
+        avgCheckSeries,
+      color:
+        'hsl(214 84% 60%)',
+    },
+
+    {
+      key: 'customers',
+      label: 'Клиенты',
+      value:
+        data?.customers?.value,
+      delta:
+        data?.customers
+          ?.changePercent,
+      fmt: num,
+      spark:
+        customersSeries,
+      color:
+        'hsl(142 64% 47%)',
+    },
+
+    {
+      key: 'repeat',
+      label:
+        'Повторные покупки',
+      value:
+        data?.repeatPurchases
+          ?.percent,
+      delta:
+        data?.repeatPurchases
+          ?.changePoints,
+      fmt: (v) =>
+        `${Number(
+          v || 0
+        ).toFixed(1)}%`,
+      spark:
+        repeatSeries,
+      color:
+        'hsl(255 100% 68%)',
+      suffix: ' п.п.',
+    },
+
+    {
+      key: 'cancel',
+      label: 'Отмены',
+      value:
+        data?.cancellations
+          ?.percent,
+      delta:
+        data?.cancellations
+          ?.changePoints,
+      fmt: (v) =>
+        `${Number(
+          v || 0
+        ).toFixed(1)}%`,
+      spark:
+        cancelSeries,
+      color:
+        'hsl(0 72% 58%)',
+      suffix: ' п.п.',
+      invert: true,
+    },
+
+    {
+      key: 'newCustomers',
+      label:
+        'Новые клиенты',
+      value:
+        data?.newCustomers
+          ?.percent,
+      delta:
+        data?.newCustomers
+          ?.changePoints,
+      fmt: (v) =>
+        `${Number(
+          v || 0
+        ).toFixed(1)}%`,
+      spark:
+        newCustomersSeries,
+      color:
+        'hsl(214 84% 60%)',
+      suffix: ' п.п.',
+    },
+  ];
+
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-      {cards.map((c) => {
-        const k = kpis[c.key];
-        return (
-          <KpiCard
-            key={c.key}
-            label={c.label}
-            value={c.fmt(k.value)}
-            delta={k.delta}
-            series={c.spark}
-            color={c.color}
-            suffix={c.suffix}
-            invert={c.invert}
-          />
-        );
-      })}
+      {cards.map((card) => (
+        <KpiCard
+          key={card.key}
+          label={card.label}
+          value={
+            loading
+              ? '—'
+              : card.fmt(
+                  card.value
+                )
+          }
+          delta={
+            loading
+              ? null
+              : card.delta
+          }
+          series={
+            card.spark
+          }
+          color={
+            card.color
+          }
+          suffix={
+            card.suffix
+          }
+          invert={
+            card.invert
+          }
+        />
+      ))}
     </div>
   );
 }
