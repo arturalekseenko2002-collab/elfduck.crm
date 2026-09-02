@@ -84,6 +84,40 @@ export default function RevenuePanel({
         ),
     }));
 
+  const xTicks =
+
+  data.length <= 8
+
+    ? data.map(
+
+        (item) => item.date
+
+      )
+
+    : Array.from(
+
+        { length: 8 },
+
+        (_, i) => {
+
+          const index =
+
+            Math.round(
+
+              ((data.length - 1) *
+
+                i) /
+
+                7
+
+            );
+
+          return data[index]?.date;
+
+        }
+
+      ).filter(Boolean);
+
   return (
     <div className="relative overflow-hidden rounded-2xl surface-card p-6">
       <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[hsl(255_100%_68%/0.08)] blur-3xl" />
@@ -163,18 +197,33 @@ export default function RevenuePanel({
               </defs>
 
               <XAxis
+
                 dataKey="date"
+
+                ticks={xTicks}
+
                 tickFormatter={
+
                   formatChartDate
+
                 }
+
                 tick={{
+
                   fill:
+
                     'hsl(228 10% 44%)',
+
                   fontSize: 10,
+
                 }}
+
                 axisLine={false}
+
                 tickLine={false}
-                minTickGap={24}
+
+                interval={0}
+
               />
 
               <YAxis

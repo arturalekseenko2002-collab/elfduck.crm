@@ -99,6 +99,25 @@ export default function RevenueChart({
       (item) =>
         item.key === tab
     ) || tabs[0];
+  
+  const xTicks =
+  data.length <= 8
+    ? data.map(
+        (item) => item.date
+      )
+    : Array.from(
+        { length: 8 },
+        (_, i) => {
+          const index =
+            Math.round(
+              ((data.length - 1) *
+                i) /
+                7
+            );
+
+          return data[index]?.date;
+        }
+      ).filter(Boolean);
 
   return (
     <div className="rounded-2xl surface-card p-6">
@@ -186,17 +205,33 @@ export default function RevenueChart({
               />
 
               <XAxis
+
                 dataKey="date"
+
+                ticks={xTicks}
+
                 tickFormatter={
+
                   formatChartDate
+
                 }
+
                 tick={{
+
                   fill:
+
                     'hsl(228 10% 44%)',
+
                   fontSize: 11,
+
                 }}
+
                 axisLine={false}
+
                 tickLine={false}
+
+                interval={0}
+
               />
 
               <YAxis
