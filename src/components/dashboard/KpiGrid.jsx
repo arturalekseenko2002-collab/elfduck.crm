@@ -116,7 +116,7 @@ export default function KpiGrid({
 
     {
       key: 'avgCheck',
-      label: 'Средний чек',
+      label: 'Ср. чек',
       value:
         data?.averageCheck
           ?.value,
