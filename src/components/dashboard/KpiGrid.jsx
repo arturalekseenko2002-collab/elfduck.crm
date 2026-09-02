@@ -87,7 +87,13 @@ export default function KpiGrid({
    * поэтому для sparkline используем
    * пустой массив.
    */
-  const cancelSeries = [];
+  const cancelSeries =
+  series.map(
+    (row) =>
+      Number(
+        row.cancellations || 0
+      )
+  );
 
   const cards = [
     {

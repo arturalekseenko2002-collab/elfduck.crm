@@ -5,11 +5,19 @@ import {
 } from 'lucide-react';
 
 import {
+
   ResponsiveContainer,
+
   AreaChart,
+
   Area,
+
+  XAxis,
+
   YAxis,
+
   Tooltip,
+
 } from 'recharts';
 
 const moneyFormatter =
@@ -25,6 +33,26 @@ function currency(value) {
   return `${moneyFormatter.format(
     Number(value || 0)
   )} zł`;
+}
+
+function formatChartDate(value) {
+  if (!value) return '';
+
+  const [
+    year,
+    month,
+    day,
+  ] = String(value).split('-');
+
+  if (
+    !year ||
+    !month ||
+    !day
+  ) {
+    return value;
+  }
+
+  return `${day}.${month}`;
 }
 
 export default function RevenuePanel({
@@ -98,7 +126,7 @@ export default function RevenuePanel({
           </span>
         </div>
 
-        <div className="mt-5 h-[120px] min-w-0">
+        <div className="mt-5 h-[140px] min-w-0">
           <ResponsiveContainer
             width="100%"
             height="100%"
@@ -134,6 +162,21 @@ export default function RevenuePanel({
                 </linearGradient>
               </defs>
 
+              <XAxis
+                dataKey="date"
+                tickFormatter={
+                  formatChartDate
+                }
+                tick={{
+                  fill:
+                    'hsl(228 10% 44%)',
+                  fontSize: 10,
+                }}
+                axisLine={false}
+                tickLine={false}
+                minTickGap={24}
+              />
+
               <YAxis
                 hide
                 domain={[
@@ -162,8 +205,14 @@ export default function RevenuePanel({
                     '0 8px 30px -8px rgba(0,0,0,0.6)',
                 }}
                 labelStyle={{
-                  display: 'none',
+                  color:
+                    'hsl(228 12% 62%)',
+                  fontSize: 11,
+                  marginBottom: 4,
                 }}
+                labelFormatter={
+                  formatChartDate
+                }
                 formatter={(v) => [
                   currency(v),
                   'Выручка',
