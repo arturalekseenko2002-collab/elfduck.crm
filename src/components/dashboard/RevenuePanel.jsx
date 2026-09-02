@@ -66,7 +66,7 @@ export default function RevenuePanel({
     );
 
   const change =
-    revenue?.changePercent;
+    revenue?.changeValue;
 
   const hasChange =
     change !== null &&
@@ -177,7 +177,7 @@ const renderXAxisTick = ({
               )}
 
               {positive ? '+' : ''}
-              {Number(change).toFixed(1)}%
+              {currency(change)}
             </span>
           )}
         </div>

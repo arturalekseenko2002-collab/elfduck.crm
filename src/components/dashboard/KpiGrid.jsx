@@ -101,14 +101,17 @@ export default function KpiGrid({
       label: 'Заказы',
       value:
         data?.orders?.value,
-      delta:
-        data?.orders
-          ?.changePercent,
+        delta:
+
+          data?.orders
+
+            ?.changeValue,
       fmt: num,
       spark:
         ordersSeries,
       color:
         'hsl(255 100% 68%)',
+      suffix: ' шт.',
     },
 
     {
@@ -117,14 +120,17 @@ export default function KpiGrid({
       value:
         data?.averageCheck
           ?.value,
-      delta:
-        data?.averageCheck
-          ?.changePercent,
+        delta:
+
+          data?.averageCheck
+
+            ?.changeValue,
       fmt: money,
       spark:
         avgCheckSeries,
       color:
         'hsl(214 84% 60%)',
+      suffix: ' zł',
     },
 
     {
@@ -132,9 +138,11 @@ export default function KpiGrid({
       label: 'Клиенты',
       value:
         data?.customers?.value,
-      delta:
-        data?.customers
-          ?.changePercent,
+        delta:
+
+          data?.customers
+
+            ?.changeValue,
       fmt: num,
       spark:
         customersSeries,
@@ -145,7 +153,7 @@ export default function KpiGrid({
     {
       key: 'repeat',
       label:
-        'Повторные покупки',
+        'Пов. покупки',
       value:
         data?.repeatPurchases
           ?.percent,
@@ -160,7 +168,7 @@ export default function KpiGrid({
         repeatSeries,
       color:
         'hsl(255 100% 68%)',
-      suffix: ' п.п.',
+      suffix: '%',
     },
 
     {
@@ -180,14 +188,14 @@ export default function KpiGrid({
         cancelSeries,
       color:
         'hsl(0 72% 58%)',
-      suffix: ' п.п.',
+      suffix: '%',
       invert: true,
     },
 
     {
       key: 'newCustomers',
       label:
-        'Новые клиенты',
+        'Новые кл.',
       value:
         data?.newCustomers
           ?.percent,
@@ -202,7 +210,7 @@ export default function KpiGrid({
         newCustomersSeries,
       color:
         'hsl(214 84% 60%)',
-      suffix: ' п.п.',
+      suffix: '%',
     },
   ];
 
