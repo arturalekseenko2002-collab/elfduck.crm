@@ -78,8 +78,8 @@ export default function RetentionPanel({
           height="100%"
         >
           <RadialBarChart
-            innerRadius="72%"
-            outerRadius="100%"
+            innerRadius="76%"
+            outerRadius="96%"
             data={chartData}
             startAngle={90}
             endAngle={-270}
