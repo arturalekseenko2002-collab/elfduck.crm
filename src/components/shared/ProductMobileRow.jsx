@@ -20,6 +20,25 @@ const productImageByKey = {
   'puffy-30-ml': '/products/puffy-30-ml.png',
   'xros-5-mini-pod': '/products/xros-5-mini-pod.png',
   'xros-cartridge': '/products/xros-cartridge.png',
+  'elf-duck-bc-45000': '/products/elf-duck-bc-45000.png',
+  'cartridge-oxva': '/products/cartridge-oxva.png',
+  'chaser-black-30-ml-2': '/products/chaser-black-30-ml-2.png',
+  'chaser-black-30-ml': '/products/chaser-black-30-ml.png',
+  'chaser-special-30-ml': '/products/chaser-special-30-ml.png',
+  'elf-duck-1500-2': '/products/elf-duck-1500-2.png',
+  'elf-duck-1500': '/products/elf-duck-1500.png',
+  'elf-duck-3000': '/products/elf-duck-3000.png',
+  'elf-duck-bc-20k': '/products/elf-duck-bc-20k.png',
+  'elf-duck-combo-30k-pro': '/products/elf-duck-combo-30k-pro.png',
+  'elf-duck-d3-25k': '/products/elf-duck-d3-25k.png',
+  'elf-duck-gh-33000-pro': '/products/elf-duck-gh-33000-pro.png',
+  'elf-duck-ice-king-30k': '/products/elf-duck-ice-king-30k.png',
+  'elf-duck-planet-25k': '/products/elf-duck-planet-25k.png',
+  'elf-duck-trio-40k': '/products/elf-duck-trio-40k.png',
+  'ethereum-30-ml': '/products/ethereum-30-ml.png',
+  'puffy-30-ml-70-mg': '/products/puffy-30-ml-70-mg.png',
+  'xros-5-pod': '/products/xros-5-pod.png',
+  'yami-30ml': '/products/yami-30ml.png',
 };
 
 export default function ProductMobileRow({ p }) {
@@ -29,6 +48,7 @@ export default function ProductMobileRow({ p }) {
   productImageByKey[p.productKey] ||
   p.imageUrl ||
   '';
+
   return (
     <div className="rounded-xl border border-border-soft bg-[hsl(232_26%_6%)] p-3.5">
       <div className="flex items-start gap-3">
