@@ -4,8 +4,19 @@ import Delta from '@/components/shared/Delta';
 import MetricGrid from '@/components/shared/MetricGrid';
 
 export default function PartnerMobileRow({ p, rank, showName = true, showTrend = false, showLtv = false }) {
-  const titleText = showName ? p.name : p.handle;
-  const subText = showName ? p.handle : null;
+const titleText = showName
+
+  ? (p.name || p.username)
+
+  : (p.username || p.handle);
+
+const subText =
+
+  showName && p.username
+
+    ? `@${p.username}`
+
+    : null;
   return (
     <div className="rounded-xl border border-border-soft bg-[hsl(232_26%_6%)] p-3.5">
       <div className="flex items-center gap-2.5">
@@ -30,12 +41,12 @@ export default function PartnerMobileRow({ p, rank, showName = true, showTrend =
       <div className="mt-3 border-t border-border-soft pt-3">
         <MetricGrid cols={3} items={[
           { label: 'Приглашено', value: num(p.invited) },
-          { label: 'Купили', value: num(p.bought) },
+          { label: 'Купили', value: num(p.buyers) },
           { label: 'Конверсия', value: `${p.conversion}%`, className: 'text-[hsl(255_100%_72%)]' },
         ]} />
         <div className="mt-2.5">
           <MetricGrid cols={showLtv ? 3 : 2} items={[
-            { label: 'Ср. чек', value: `${p.avgCheck} zł` },
+            { label: 'Ср. чек', value: `${p.averageCheck} zł` },
             ...(showLtv ? [{ label: 'LTV клиентов', value: `${p.ltv} zł` }] : []),
           ]} />
         </div>

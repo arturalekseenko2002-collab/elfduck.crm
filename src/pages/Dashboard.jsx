@@ -214,7 +214,10 @@ export default function Dashboard() {
       />
 
       {/* Пока остаётся mock */}
-      <TopPartners />
+      <TopPartners
+        data={data?.topPartners}
+        loading={isLoading}
+      />
     </div>
   );
 }
