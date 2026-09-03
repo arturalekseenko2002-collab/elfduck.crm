@@ -73,9 +73,15 @@ function getMetricView(
         ],
       };
 
-    case 'averageCheck':
-    case 'avg':
-    case 'check':
+      case 'averageCheck':
+
+      case 'avgCheck':
+
+      case 'average':
+
+      case 'avg':
+
+      case 'check':
       return {
         value:
           formatCurrency(
@@ -103,6 +109,7 @@ function getMetricView(
       };
 
     case 'growth':
+    case 'trend':
       return {
         value:
           `${
@@ -170,8 +177,13 @@ function getMetricView(
         ],
       };
 
-    case 'repeat':
-    case 'repeats':
+      case 'repeat':
+
+      case 'repeats':
+
+      case 'repeatRate':
+
+      case 'repeatPercent':
       return {
         value:
           `${formatNumber(
