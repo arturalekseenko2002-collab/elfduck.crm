@@ -19,8 +19,21 @@ const currency = (value) =>
     Number(value || 0)
   );
 
-const percent = (value) =>
-  `${Number(value || 0).toFixed(1)}%`;
+const percent = (value) => {
+
+  const number = Number(value || 0);
+
+  return `${
+
+    Number.isInteger(number)
+
+      ? number.toFixed(0)
+
+      : number.toFixed(1)
+
+  }%`;
+
+};
 
 const intervalDays = (value) => {
   const days =
@@ -120,9 +133,9 @@ export default function RetentionPanel({
                 {changePositive
                   ? '+'
                   : ''}
-                {changeValue.toFixed(
-                  1
-                )}
+                {Number.isInteger(changeValue)
+                  ? changeValue.toFixed(0)
+                  : changeValue.toFixed(1)}
                 %
               </span>
             )}
