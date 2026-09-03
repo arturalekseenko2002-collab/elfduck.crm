@@ -1,18 +1,34 @@
 import React, { useState, useMemo } from 'react';
-import { locations } from '@/lib/mockData';
+// import { locations } from '@/lib/mockData';
 import LocationCard from '@/components/shared/LocationCard';
 import { sortOptions } from '@/lib/locationMetrics';
 import { usePeriod } from '@/lib/PeriodContext';
 import { cn } from '@/lib/utils';
 
-export default function LocationPerformance() {
+export default function LocationPerformance({ data, loading = false }) {
   const { range } = usePeriod();
   const [metric, setMetric] = useState('revenue');
   const days = useMemo(() => {
     if (!range) return null;
     return Math.max(1, Math.round((range.end - range.start) / 86400000));
   }, [range]);
-  const rows = [...locations].sort((a, b) => b[metric] - a[metric]);
+  const locations = Array.isArray(data?.rows)
+    ? data.rows
+    : [];
+
+  const rows = [...locations].sort((a, b) => {
+    const metricKey =
+      metric === 'averageCheck'
+        ? 'averageCheck'
+        : metric === 'orders'
+          ? 'orders'
+          : 'revenue';
+
+    return (
+      Number(b?.[metricKey] || 0) -
+      Number(a?.[metricKey] || 0)
+    );
+  });
 
   return (
     <div className="rounded-2xl surface-card p-6">
@@ -36,11 +52,30 @@ export default function LocationPerformance() {
         </div>
       </div>
 
+      {loading && (
+        <div className="mt-5 rounded-xl border border-border-soft bg-[hsl(234_22%_9%/0.45)] px-4 py-8 text-center text-[13px] text-muted-foreground">
+          Загружаем точки продаж…
+        </div>
+      )}
+
+      {!loading && rows.length === 0 && (
+        <div className="mt-5 rounded-xl border border-border-soft bg-[hsl(234_22%_9%/0.45)] px-4 py-8 text-center text-[13px] text-muted-foreground">
+          За выбранный период данных по точкам нет
+        </div>
+      )}
+
+    {!loading && rows.length > 0 && (
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((l) => (
-          <LocationCard key={l.name} metric={metric} location={l} days={days} />
+          <LocationCard
+            key={l.id || l.name}
+            metric={metric}
+            location={l}
+            days={days}
+          />
         ))}
       </div>
+    )}
     </div>
   );
 }

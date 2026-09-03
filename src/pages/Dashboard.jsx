@@ -208,7 +208,10 @@ export default function Dashboard() {
       />
 
       {/* Пока остаётся mock */}
-      <LocationPerformance />
+      <LocationPerformance
+        data={data?.locations}
+        loading={isLoading}
+      />
 
       {/* Пока остаётся mock */}
       <TopPartners />
