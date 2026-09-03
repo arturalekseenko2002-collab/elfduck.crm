@@ -194,7 +194,10 @@ export default function Dashboard() {
         </div>
 
         <div className="col-span-12 lg:col-span-4">
-          <RetentionPanel />
+          <RetentionPanel
+            data={data?.retention}
+            loading={isLoading}
+          />
         </div>
       </div>
 
