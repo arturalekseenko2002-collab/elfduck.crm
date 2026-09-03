@@ -16,19 +16,46 @@ export default function LocationPerformance({ data, loading = false }) {
     ? data.rows
     : [];
 
-  const rows = [...locations].sort((a, b) => {
-    const metricKey =
-      metric === 'averageCheck'
-        ? 'averageCheck'
-        : metric === 'orders'
-          ? 'orders'
-          : 'revenue';
+const getMetricKey = (metric) => {
+  switch (metric) {
+    case 'orders':
+      return 'orders';
 
-    return (
-      Number(b?.[metricKey] || 0) -
-      Number(a?.[metricKey] || 0)
-    );
-  });
+    case 'averageCheck':
+    case 'avg':
+    case 'check':
+      return 'averageCheck';
+
+    case 'growth':
+      return 'revenueChange';
+
+    case 'cancel':
+    case 'cancellations':
+      return 'cancellationsPercent';
+
+    case 'repeat':
+    case 'repeats':
+      return 'repeatPercent';
+
+    case 'revenue':
+    default:
+      return 'revenue';
+  }
+};
+
+const metricKey =
+  getMetricKey(metric);
+
+const rows =
+  [...locations].sort(
+    (a, b) =>
+      Number(
+        b?.[metricKey] || 0
+      ) -
+      Number(
+        a?.[metricKey] || 0
+      )
+  );
 
   return (
     <div className="rounded-2xl surface-card p-6">

@@ -42,39 +42,187 @@ function Trend({ value, invert = false }) {
   );
 }
 
-function getMetricView(metric, location) {
+function getMetricView(
+  metric,
+  location
+) {
   switch (metric) {
     case 'orders':
       return {
-        value: formatNumber(location.orders),
-        label: 'Заказы',
-        trend: location.ordersChange,
+        value:
+          formatNumber(
+            location.orders
+          ),
+
+        label:
+          'Заказы',
+
+        trend:
+          location.ordersChange,
+
         spark: [
-          Number(location.previousOrders || 0),
-          Number(location.orders || 0),
+          Number(
+            location
+              .previousOrders ||
+              0
+          ),
+          Number(
+            location.orders ||
+              0
+          ),
         ],
       };
 
     case 'averageCheck':
+    case 'avg':
+    case 'check':
       return {
-        value: formatCurrency(location.averageCheck),
-        label: 'Средний чек',
-        trend: location.averageCheckChange,
+        value:
+          formatCurrency(
+            location.averageCheck
+          ),
+
+        label:
+          'Средний чек',
+
+        trend:
+          location
+            .averageCheckChange,
+
         spark: [
-          Number(location.previousAverageCheck || 0),
-          Number(location.averageCheck || 0),
+          Number(
+            location
+              .previousAverageCheck ||
+              0
+          ),
+          Number(
+            location
+              .averageCheck || 0
+          ),
+        ],
+      };
+
+    case 'growth':
+      return {
+        value:
+          `${
+            Number(
+              location
+                .revenueChange ||
+                0
+            ) > 0
+              ? '+'
+              : ''
+          }${Number(
+            location
+              .revenueChange ||
+              0
+          )}%`,
+
+        label:
+          'Рост',
+
+        trend: null,
+
+        spark: [
+          Number(
+            location
+              .previousRevenue ||
+              0
+          ),
+          Number(
+            location.revenue ||
+              0
+          ),
+        ],
+      };
+
+    case 'cancel':
+    case 'cancellations':
+      return {
+        value:
+          `${formatNumber(
+            location
+              .cancellationsPercent,
+            1
+          )}%`,
+
+        label:
+          'Отмены',
+
+        trend:
+          location
+            .cancellationsChangePoints,
+
+        invertTrend: true,
+
+        spark: [
+          Number(
+            location
+              .previousCancellationsPercent ||
+              0
+          ),
+          Number(
+            location
+              .cancellationsPercent ||
+              0
+          ),
+        ],
+      };
+
+    case 'repeat':
+    case 'repeats':
+      return {
+        value:
+          `${formatNumber(
+            location.repeatPercent,
+            1
+          )}%`,
+
+        label:
+          'Повторные',
+
+        trend:
+          location
+            .repeatChangePoints,
+
+        spark: [
+          Number(
+            location
+              .previousRepeatPercent ||
+              0
+          ),
+          Number(
+            location.repeatPercent ||
+              0
+          ),
         ],
       };
 
     case 'revenue':
     default:
       return {
-        value: formatCurrency(location.revenue),
-        label: 'Выручка',
-        trend: location.revenueChange,
+        value:
+          formatCurrency(
+            location.revenue
+          ),
+
+        label:
+          'Выручка',
+
+        trend:
+          location.revenueChange,
+
         spark: [
-          Number(location.previousRevenue || 0),
-          Number(location.revenue || 0),
+          Number(
+            location
+              .previousRevenue ||
+              0
+          ),
+          Number(
+            location.revenue ||
+              0
+          ),
         ],
       };
   }
@@ -96,7 +244,17 @@ export default function LocationCard({
           {location.name}
         </span>
 
-        <Trend value={view.trend} />
+        <Trend
+
+          value={view.trend}
+
+          invert={Boolean(
+
+            view.invertTrend
+
+          )}
+
+        />
       </div>
 
       <div className="mt-2 font-heading text-[24px] font-semibold leading-none tabular-nums text-foreground">
