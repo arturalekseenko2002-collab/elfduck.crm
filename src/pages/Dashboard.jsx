@@ -202,7 +202,10 @@ export default function Dashboard() {
       </div>
 
       {/* Пока остаётся mock */}
-      <ProductPerformance />
+      <ProductPerformance
+        data={data?.products}
+        loading={isLoading}
+      />
 
       {/* Пока остаётся mock */}
       <LocationPerformance />

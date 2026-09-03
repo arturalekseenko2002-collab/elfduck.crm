@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { allProducts, productCategories, currency, num } from '@/lib/mockData';
+import { currency, num } from '@/lib/mockData';
 import Sparkline from '@/components/shared/Sparkline';
 import Delta from '@/components/shared/Delta';
 import Pagination from '@/components/shared/Pagination';
@@ -15,21 +15,51 @@ const segments = [
 
 const PAGE_SIZE = 10;
 
-export default function ProductPerformance() {
+export default function ProductPerformance({ data, loading = false }) {
   const { period } = usePeriod();
   const [seg, setSeg] = useState('best');
   const [cat, setCat] = useState('Все категории');
   const [page, setPage] = useState(1);
 
-  useEffect(() => { setPage(1); }, [period]);
+  const allProducts = Array.isArray(data?.rows)
+    ? data.rows
+    : [];
+
+  const productCategories = Array.isArray(data?.categories)
+    ? data.categories
+    : ['Все категории'];
+
+  useEffect(() => {
+    setPage(1);
+  }, [period, data]);
 
   const filtered = useMemo(() => {
     let rows;
-    if (seg === 'best') rows = [...allProducts].sort((a, b) => b.revenue - a.revenue);
-    else if (seg === 'worst') rows = [...allProducts].sort((a, b) => a.revenue - b.revenue);
-    else rows = allProducts.filter((p) => cat === 'Все категории' || p.category === cat);
+
+    if (seg === 'best') {
+      rows = [...allProducts]
+        .filter((p) => Number(p.revenue || 0) > 0)
+        .sort(
+          (a, b) =>
+            Number(b.revenue || 0) -
+            Number(a.revenue || 0)
+        );
+    } else if (seg === 'worst') {
+      rows = [...allProducts].sort(
+        (a, b) =>
+          Number(a.revenue || 0) -
+          Number(b.revenue || 0)
+      );
+    } else {
+      rows = allProducts.filter(
+        (p) =>
+          cat === 'Все категории' ||
+          p.category === cat
+      );
+    }
+
     return rows;
-  }, [seg, cat]);
+  }, [allProducts, seg, cat]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
@@ -37,6 +67,32 @@ export default function ProductPerformance() {
 
   const onSegChange = (s) => { setSeg(s); setPage(1); };
   const onCatChange = (c) => { setCat(c); setPage(1); };
+
+  const formatDays = (value) => {
+
+    if (
+
+      value === null ||
+
+      value === undefined ||
+
+      !Number.isFinite(Number(value))
+
+    ) {
+
+      return '—';
+
+    }
+
+    const number = Number(value);
+
+    return Number.isInteger(number)
+
+      ? number.toFixed(0)
+
+      : number.toFixed(1);
+
+  };
 
   return (
     <div className="rounded-2xl surface-card p-6">
@@ -73,6 +129,18 @@ export default function ProductPerformance() {
         </div>
       </div>
 
+      {loading && (
+        <div className="mt-4 rounded-xl border border-border-soft bg-[hsl(234_22%_9%/0.45)] px-4 py-8 text-center text-[13px] text-muted-foreground">
+          Загружаем товары…
+        </div>
+      )}
+
+      {!loading && filtered.length === 0 && (
+        <div className="mt-4 rounded-xl border border-border-soft bg-[hsl(234_22%_9%/0.45)] px-4 py-8 text-center text-[13px] text-muted-foreground">
+          За выбранный период данных по товарам нет
+        </div>
+      )}
+
       {/* Desktop / tablet table */}
       <div className="mt-4 hidden md:block">
         <div className="overflow-x-auto scrollbar-thin">
@@ -86,7 +154,12 @@ export default function ProductPerformance() {
             </thead>
             <tbody>
               {pageRows.map((p) => {
-                const lowStock = p.days <= 2;
+                const lowStock =
+                  Number(p.stock || 0) <= 10 ||
+                  (
+                    p.days !== null &&
+                    Number(p.days) <= 2
+                  );
                 return (
                   <tr key={p.id} className="border-b border-border-soft hover:bg-[hsl(234_22%_11%/0.6)]">
                     <td className="px-3 py-3 font-medium text-foreground">{p.name}</td>
@@ -95,12 +168,33 @@ export default function ProductPerformance() {
                     <td className="px-3 py-3 text-right text-muted-foreground">{num(p.sold)} шт.</td>
                     <td className="px-3 py-3">
                       <div className="flex items-center justify-end gap-2">
-                        <div className="w-16"><Sparkline data={p.spark} color={p.trend >= 0 ? 'hsl(255 100% 68%)' : 'hsl(0_72%_58%)'} height={22} /></div>
-                        <Delta value={p.trend} suffix="%" />
+                        <div className="w-16">
+                          <Sparkline
+                            data={Array.isArray(p.spark) ? p.spark : []}
+                            color={
+                              Number(p.trend || 0) >= 0
+                                ? 'hsl(255 100% 68%)'
+                                : 'hsl(0_72%_58%)'
+                            }
+                            height={22}
+                          />
+                        </div>
+
+                        {p.trend === null ||
+                        p.trend === undefined ? (
+                          <span className="text-[12px] text-muted-2">
+                            —
+                          </span>
+                        ) : (
+                          <Delta
+                            value={Number(p.trend)}
+                            suffix="%"
+                          />
+                        )}
                       </div>
                     </td>
                     <td className={cn('px-3 py-3 text-right', lowStock ? 'text-[hsl(36_90%_62%)]' : 'text-muted-foreground')}>{p.stock} шт.</td>
-                    <td className={cn('px-3 py-3 text-right', lowStock ? 'font-medium text-[hsl(36_90%_62%)]' : 'text-muted-foreground')}>{p.days}</td>
+                    <td className={cn('px-3 py-3 text-right', lowStock ? 'font-medium text-[hsl(36_90%_62%)]' : 'text-muted-foreground')}>{formatDays(p.days)}</td>
                   </tr>
                 );
               })}
