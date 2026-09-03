@@ -39,7 +39,7 @@ const productImageByKey = {
   'puffy-30-ml-70-mg': '/products/puffy-30-ml-70-mg.png',
   'xros-5-pod': '/products/xros-5-pod.png',
   'yami-30ml': '/products/yami-30ml.png',
-  'elflx-pod': '/products/elflx-pod.png',
+  'elfx-pod': '/products/elfx-pod.png',
 };
 
 export default function ProductMobileRow({ p }) {
