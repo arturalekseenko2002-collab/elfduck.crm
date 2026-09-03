@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
-import { allOrders, currency, num } from '@/lib/mockData';
+import { currency, num } from '@/lib/mockData';
 import DataTable from '@/components/shared/DataTable';
 import Badge from '@/components/shared/Badge';
 import Pagination from '@/components/shared/Pagination';
@@ -8,113 +9,524 @@ import KpiCard from '@/components/shared/KpiCard';
 import MetricGrid from '@/components/shared/MetricGrid';
 import { usePeriod } from '@/lib/PeriodContext';
 
-const statusMap = { done: 'done', cancelled: 'cancelled', processing: 'processing' };
+const statusMap = {
+  done: 'done',
+  cancelled: 'cancelled',
+  processing: 'processing',
+};
+
 const PAGE_SIZE = 50;
+
+const CRM_API_URL = String(
+  import.meta.env.VITE_CRM_API_URL || ''
+).replace(/\/+$/, '');
+
+function formatOrderDate(value) {
+  if (!value) return '—';
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '—';
+  }
+
+  return new Intl.DateTimeFormat('ru-RU', {
+    timeZone: 'Europe/Warsaw',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+function formatDateOnly(date) {
+  const year = date.getFullYear();
+
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, '0');
+
+  const day = String(
+    date.getDate()
+  ).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
 
 export default function Orders() {
   const { period, range } = usePeriod();
+
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
 
-  useEffect(() => { setPage(1); }, [period, query]);
+  useEffect(() => {
+    setPage(1);
+  }, [
+    period,
+    range?.start,
+    range?.end,
+    query,
+  ]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return allOrders.filter((o) => {
-      if (range && (o.orderDate < range.start || o.orderDate > range.end)) return false;
-      if (q && !o.id.toLowerCase().includes(q) && !o.customer.toLowerCase().includes(q) && !o.items.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  }, [range, query]);
+  const queryString = useMemo(() => {
+    const params =
+      new URLSearchParams();
 
-  const summary = useMemo(() => {
-    const done = filtered.filter((o) => o.status !== 'cancelled');
-    const revenue = done.reduce((a, o) => a + o.amount, 0);
-    const cancelled = filtered.filter((o) => o.status === 'cancelled').length;
-    return [
-      { label: 'Заказов', value: num(filtered.length) },
-      { label: 'Выручка', value: currency(revenue) },
-      { label: 'Средний чек', value: `${Math.round(revenue / (done.length || 1))} zł` },
-      { label: 'Отмен', value: `${Math.round((cancelled / (filtered.length || 1)) * 1000) / 10}%` },
-    ];
-  }, [filtered]);
+    const periodMap = {
+      Сегодня: 'today',
+      Неделя: 'week',
+      Месяц: 'month',
+      '3 мес': '3m',
+      '3 месяца': '3m',
+      '6 мес': '6m',
+      '6 месяцев': '6m',
+      Всё: 'all',
+      'Все время': 'all',
+    };
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, pageCount);
-  const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+    if (
+      range?.start &&
+      range?.end
+    ) {
+      params.set(
+        'from',
+        formatDateOnly(
+          range.start
+        )
+      );
+
+      params.set(
+        'to',
+        formatDateOnly(
+          range.end
+        )
+      );
+    } else {
+      params.set(
+        'period',
+        periodMap[period] ||
+          'month'
+      );
+    }
+
+    params.set(
+      'page',
+      String(page)
+    );
+
+    params.set(
+      'limit',
+      String(PAGE_SIZE)
+    );
+
+    const search =
+      query.trim();
+
+    if (search) {
+      params.set(
+        'search',
+        search
+      );
+    }
+
+    return params.toString();
+  }, [
+    period,
+    range?.start,
+    range?.end,
+    page,
+    query,
+  ]);
+
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: [
+      'crm-orders',
+      period,
+      queryString,
+    ],
+
+    enabled:
+      Boolean(queryString),
+
+    queryFn: async () => {
+      if (!CRM_API_URL) {
+        throw new Error(
+          'VITE_CRM_API_URL is not configured'
+        );
+      }
+
+      const response =
+        await fetch(
+          `${CRM_API_URL}/crm/orders?${queryString}`
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(() => ({}));
+
+      if (
+        !response.ok ||
+        result?.ok === false
+      ) {
+        throw new Error(
+          result?.error ||
+            'ORDERS_LOAD_FAILED'
+        );
+      }
+
+      return result;
+    },
+  });
+
+  const pageRows =
+    Array.isArray(data?.rows)
+      ? data.rows
+      : [];
+
+  const pagination =
+    data?.pagination || {};
+
+  const safePage =
+    Number(
+      pagination.page || page
+    );
+
+  const pageCount =
+    Number(
+      pagination.pageCount || 1
+    );
+
+  const total =
+    Number(
+      pagination.total || 0
+    );
+
+  const summary =
+    useMemo(() => {
+      const apiSummary =
+        data?.summary || {};
+
+      return [
+        {
+          label: 'Заказов',
+          value: num(
+            apiSummary.orders || 0
+          ),
+        },
+
+        {
+          label: 'Выручка',
+          value: currency(
+            apiSummary.revenue || 0
+          ),
+        },
+
+        {
+          label: 'Средний чек',
+          value: `${Math.round(
+            Number(
+              apiSummary.averageCheck ||
+                0
+            )
+          )} zł`,
+        },
+
+        {
+          label: 'Отмен',
+          value: `${Number(
+            apiSummary
+              .cancellationsPercent ||
+              0
+          )}%`,
+        },
+      ];
+    }, [data]);
 
   const columns = [
-    { key: 'id', header: 'ID', render: (r) => <span className="font-mono text-[12px] text-muted-foreground">{r.id}</span> },
-    { key: 'customer', header: 'Клиент', render: (r) => <span className="font-medium text-foreground">{r.customer}</span> },
-    { key: 'date', header: 'Дата', render: (r) => <span className="text-muted-foreground">{r.date}</span> },
-    { key: 'items', header: 'Товары', render: (r) => <span className="text-muted-foreground">{r.items}</span> },
-    { key: 'amount', header: 'Сумма', align: 'right', render: (r) => <span className="font-medium text-foreground">{r.amount} zł</span> },
-    { key: 'payment', header: 'Оплата', render: (r) => <span className="text-muted-foreground">{r.payment}</span> },
-    { key: 'delivery', header: 'Доставка', render: (r) => <span className="text-muted-foreground">{r.delivery}</span> },
-    { key: 'location', header: 'Точка', render: (r) => <span className="text-muted-foreground">{r.location}</span> },
-    { key: 'status', header: 'Статус', render: (r) => <Badge status={statusMap[r.status]} /> },
+    {
+      key: 'orderNo',
+      header: 'ID',
+      render: (r) => (
+        <span className="font-mono text-[12px] text-muted-foreground">
+          {r.orderNo}
+        </span>
+      ),
+    },
+
+    {
+      key: 'customer',
+      header: 'Клиент',
+      render: (r) => (
+        <span className="font-medium text-foreground">
+          {r.customer}
+        </span>
+      ),
+    },
+
+    {
+      key: 'date',
+      header: 'Дата',
+      render: (r) => (
+        <span className="text-muted-foreground">
+          {formatOrderDate(
+            r.date
+          )}
+        </span>
+      ),
+    },
+
+    {
+      key: 'items',
+      header: 'Товары',
+      render: (r) => (
+        <span className="text-muted-foreground">
+          {r.items}
+        </span>
+      ),
+    },
+
+    {
+      key: 'amount',
+      header: 'Сумма',
+      align: 'right',
+      render: (r) => (
+        <span className="font-medium text-foreground">
+          {r.amount} zł
+        </span>
+      ),
+    },
+
+    {
+      key: 'payment',
+      header: 'Оплата',
+      render: (r) => (
+        <span className="text-muted-foreground">
+          {r.payment}
+        </span>
+      ),
+    },
+
+    {
+      key: 'delivery',
+      header: 'Доставка',
+      render: (r) => (
+        <span className="text-muted-foreground">
+          {r.delivery}
+        </span>
+      ),
+    },
+
+    {
+      key: 'location',
+      header: 'Точка',
+      render: (r) => (
+        <span className="text-muted-foreground">
+          {r.location}
+        </span>
+      ),
+    },
+
+    {
+      key: 'status',
+      header: 'Статус',
+      render: (r) => (
+        <Badge
+          status={
+            statusMap[r.status]
+          }
+        />
+      ),
+    },
   ];
 
   return (
     <div className="space-y-5">
+
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {summary.map((s) => (
-          <KpiCard key={s.label} label={s.label} value={s.value} />
+          <KpiCard
+            key={s.label}
+            label={s.label}
+            value={s.value}
+          />
         ))}
       </div>
 
       <div className="flex justify-end">
         <div className="relative w-full sm:w-64">
+
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-2" />
+
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) =>
+              setQuery(
+                e.target.value
+              )
+            }
             placeholder="Поиск заказа…"
             className="h-9 w-full rounded-lg border border-border bg-[hsl(232_26%_7%)] pl-9 pr-3 text-[13px] outline-none focus:border-[hsl(255_100%_68%/0.4)]"
           />
+
         </div>
       </div>
 
       <div className="rounded-2xl surface-card p-2">
-        <div className="hidden md:block">
-          <DataTable columns={columns} rows={pageRows} dense />
-        </div>
-        <div className="space-y-2.5 p-1 md:hidden">
-          {pageRows.map((r) => (
-            <OrderMobileRow key={r.id} r={r} />
-          ))}
-        </div>
-        <Pagination
-          page={safePage}
-          pageCount={pageCount}
-          total={filtered.length}
-          pageSize={PAGE_SIZE}
-          onPageChange={setPage}
-        />
+
+        {isLoading && (
+          <div className="px-4 py-10 text-center text-[13px] text-muted-foreground">
+            Загружаем заказы…
+          </div>
+        )}
+
+        {isError && (
+          <div className="px-4 py-10 text-center text-[13px] text-red-400">
+            Не удалось загрузить
+            заказы
+            {error?.message
+              ? `: ${error.message}`
+              : ''}
+          </div>
+        )}
+
+        {!isLoading &&
+          !isError &&
+          pageRows.length ===
+            0 && (
+            <div className="px-4 py-10 text-center text-[13px] text-muted-foreground">
+              За выбранный период
+              заказов нет
+            </div>
+          )}
+
+        {!isLoading &&
+          !isError &&
+          pageRows.length >
+            0 && (
+            <div className="hidden md:block">
+              <DataTable
+                columns={columns}
+                rows={pageRows}
+                dense
+              />
+            </div>
+          )}
+
+        {!isLoading &&
+          !isError &&
+          pageRows.length >
+            0 && (
+            <div className="space-y-2.5 p-1 md:hidden">
+
+              {pageRows.map(
+                (r) => (
+                  <OrderMobileRow
+                    key={r.id}
+                    r={r}
+                  />
+                )
+              )}
+
+            </div>
+          )}
+
+        {!isLoading &&
+          !isError &&
+          total > 0 && (
+            <Pagination
+              page={safePage}
+              pageCount={
+                pageCount
+              }
+              total={total}
+              pageSize={
+                PAGE_SIZE
+              }
+              onPageChange={
+                setPage
+              }
+            />
+          )}
+
       </div>
     </div>
   );
 }
 
-function OrderMobileRow({ r }) {
+function OrderMobileRow({
+  r,
+}) {
   return (
     <div className="rounded-xl border border-border-soft bg-[hsl(232_26%_6%)] p-3.5">
+
       <div className="flex items-start justify-between gap-2">
+
         <div className="min-w-0">
-          <div className="font-mono text-[11px] text-muted-foreground">{r.id}</div>
-          <div className="truncate text-[13px] font-medium text-foreground">{r.customer}</div>
-          <div className="text-[11px] text-muted-2">{r.date}</div>
+
+          <div className="font-mono text-[11px] text-muted-foreground">
+            {r.orderNo}
+          </div>
+
+          <div className="truncate text-[13px] font-medium text-foreground">
+            {r.customer}
+          </div>
+
+          <div className="text-[11px] text-muted-2">
+            {formatOrderDate(
+              r.date
+            )}
+          </div>
+
         </div>
-        <Badge status={statusMap[r.status]} />
+
+        <Badge
+          status={
+            statusMap[r.status]
+          }
+        />
+
       </div>
-      <div className="mt-2 text-[12px] text-muted-foreground">{r.items}</div>
+
+      <div className="mt-2 text-[12px] text-muted-foreground">
+        {r.items}
+      </div>
+
       <div className="mt-3 border-t border-border-soft pt-3">
-        <MetricGrid cols={3} items={[
-          { label: 'Сумма', value: `${r.amount} zł`, className: 'text-foreground' },
-          { label: 'Оплата', value: r.payment },
-          { label: 'Доставка', value: r.delivery },
-        ]} />
-        <div className="mt-2 text-[11px] text-muted-2">Точка: <span className="text-muted-foreground">{r.location}</span></div>
+
+        <MetricGrid
+          cols={3}
+          items={[
+            {
+              label: 'Сумма',
+              value: `${r.amount} zł`,
+              className:
+                'text-foreground',
+            },
+            {
+              label: 'Оплата',
+              value: r.payment,
+            },
+            {
+              label: 'Доставка',
+              value: r.delivery,
+            },
+          ]}
+        />
+
+        <div className="mt-2 text-[11px] text-muted-2">
+          Точка:{' '}
+          <span className="text-muted-foreground">
+            {r.location}
+          </span>
+        </div>
+
       </div>
     </div>
   );
