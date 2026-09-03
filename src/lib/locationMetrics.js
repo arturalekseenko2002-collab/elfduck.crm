@@ -1,12 +1,19 @@
 import { currency, num } from '@/lib/mockData';
 
 export const sortOptions = [
+
   { key: 'revenue', label: 'Выручка' },
+
   { key: 'orders', label: 'Заказы' },
-  { key: 'avgCheck', label: 'Средний чек' },
-  { key: 'delta', label: 'Рост' },
-  { key: 'cancel', label: 'Отмены' },
-  { key: 'repeatShare', label: 'Повторные' },
+
+  { key: 'averageCheck', label: 'Средний чек' },
+
+  { key: 'growth', label: 'Рост' },
+
+  { key: 'cancellations', label: 'Отмены' },
+
+  { key: 'repeat', label: 'Повторные' },
+
 ];
 
 export const metricConfig = {
