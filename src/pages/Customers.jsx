@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
-import { allCustomers, currency } from '@/lib/mockData';
 import DataTable from '@/components/shared/DataTable';
 import Badge from '@/components/shared/Badge';
 import Pagination from '@/components/shared/Pagination';
@@ -18,6 +18,68 @@ const statusFilters = [
 const statusMap = { active: 'active', sleeping: 'sleeping', vip: 'vip', new: 'new' };
 const PAGE_SIZE = 50;
 
+const CRM_API_URL = String(
+  import.meta.env.VITE_CRM_API_URL || ''
+).replace(/\/+$/, '');
+
+const periodMap = {
+  'Сегодня': 'today',
+  'Неделя': 'week',
+  'Месяц': 'month',
+  '3 мес': '3m',
+  '3 месяца': '3m',
+  '6 мес': '6m',
+  '6 месяцев': '6m',
+  'Всё': 'all',
+  'Все время': 'all',
+};
+
+const validPeriodKeys = new Set([
+  'today',
+  'week',
+  'month',
+  '3m',
+  '6m',
+  'all',
+]);
+
+const formatMoney = (value) =>
+  `${new Intl.NumberFormat('ru-RU', {
+    maximumFractionDigits: 2,
+  }).format(Number(value || 0))} zł`;
+
+const formatNumber = (value) =>
+  new Intl.NumberFormat('ru-RU').format(
+    Number(value || 0)
+  );
+
+const formatDateOnly = (date) => {
+  const year = date.getFullYear();
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, '0');
+
+  const day = String(
+    date.getDate()
+  ).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
+const formatLastOrder = (value) => {
+  if (!value) return '—';
+
+  return new Intl.DateTimeFormat(
+    'ru-RU',
+    {
+      timeZone: 'Europe/Warsaw',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }
+  ).format(new Date(value));
+};
+
 function Avatar({ name }) {
   const initials = name.split(' ').map((p) => p[0]).slice(0, 2).join('');
   return (
@@ -28,37 +90,203 @@ function Avatar({ name }) {
 }
 
 export default function Customers() {
-  const { period } = usePeriod();
+  const { period, range } = usePeriod();
   const [status, setStatus] = useState('all');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
 
-  useEffect(() => { setPage(1); }, [period, status, query]);
+const baseQueryString = useMemo(() => {
+  const periodKey =
+    periodMap[period] ||
+    (
+      validPeriodKeys.has(period)
+        ? period
+        : null
+    );
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return allCustomers.filter((c) => {
-      if (status !== 'all' && c.status !== status) return false;
-      if (q && !c.name.toLowerCase().includes(q) && !c.handle.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  }, [status, query]);
+  if (periodKey) {
+    return `period=${encodeURIComponent(
+      periodKey
+    )}`;
+  }
 
-  const summary = useMemo(() => {
-    const active = allCustomers.filter((c) => c.status === 'active').length;
-    const topLtv = Math.max(...allCustomers.map((c) => c.ltv));
-    const avgCheck = Math.round(allCustomers.reduce((a, c) => a + c.avgCheck, 0) / allCustomers.length);
-    return [
-      { label: 'Клиентов', value: '284' },
-      { label: 'Активных', value: String(active) },
-      { label: 'Top LTV', value: currency(topLtv) },
-      { label: 'Средний чек', value: `${avgCheck} zł` },
-    ];
-  }, []);
+  if (
+    range?.start &&
+    range?.end
+  ) {
+    return (
+      `from=${formatDateOnly(
+        range.start
+      )}` +
+      `&to=${formatDateOnly(
+        range.end
+      )}`
+    );
+  }
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, pageCount);
-  const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  return '';
+}, [
+  period,
+  range?.start,
+  range?.end,
+]);
+
+const requestQuery =
+  useMemo(() => {
+    if (!baseQueryString) {
+      return '';
+    }
+
+    const params =
+      new URLSearchParams(
+        baseQueryString
+      );
+
+    params.set(
+      'page',
+      String(page)
+    );
+
+    params.set(
+      'limit',
+      String(PAGE_SIZE)
+    );
+
+    params.set(
+      'status',
+      status
+    );
+
+    const trimmedQuery =
+      query.trim();
+
+    if (trimmedQuery) {
+      params.set(
+        'search',
+        trimmedQuery
+      );
+    }
+
+    return params.toString();
+  }, [
+    baseQueryString,
+    page,
+    status,
+    query,
+  ]);
+
+useEffect(() => {
+  setPage(1);
+}, [
+  baseQueryString,
+  status,
+  query,
+]);
+
+const {
+  data,
+  isLoading,
+  isError,
+  error,
+} = useQuery({
+  queryKey: [
+    'crm-customers',
+    requestQuery,
+  ],
+
+  enabled:
+    Boolean(requestQuery),
+
+  queryFn: async () => {
+    if (!CRM_API_URL) {
+      throw new Error(
+        'VITE_CRM_API_URL is not configured'
+      );
+    }
+
+    const response =
+      await fetch(
+        `${CRM_API_URL}/crm/customers?${requestQuery}`
+      );
+
+    const result =
+      await response
+        .json()
+        .catch(() => ({}));
+
+    if (
+      !response.ok ||
+      result?.ok === false
+    ) {
+      throw new Error(
+        result?.error ||
+          'CUSTOMERS_LOAD_FAILED'
+      );
+    }
+
+    return result;
+  },
+});
+
+const pageRows =
+  Array.isArray(data?.rows)
+    ? data.rows
+    : [];
+
+const summaryData =
+  data?.summary || {};
+
+const pagination =
+  data?.pagination || {};
+
+const safePage =
+  Number(
+    pagination.page || page
+  );
+
+const pageCount =
+  Number(
+    pagination.pageCount || 1
+  );
+
+const total =
+  Number(
+    pagination.total || 0
+  );
+
+const summary = [
+  {
+    label: 'Клиентов',
+    value:
+      formatNumber(
+        summaryData.customers
+      ),
+  },
+
+  {
+    label: 'Активных',
+    value:
+      formatNumber(
+        summaryData.active
+      ),
+  },
+
+  {
+    label: 'Top LTV',
+    value:
+      formatMoney(
+        summaryData.topLtv
+      ),
+  },
+
+  {
+    label: 'Средний чек',
+    value:
+      formatMoney(
+        summaryData.averageCheck
+      ),
+  },
+];
 
   const columns = [
     {
@@ -74,12 +302,48 @@ export default function Customers() {
     },
     { key: 'status', header: 'Статус', render: (r) => <Badge status={statusMap[r.status]} /> },
     { key: 'segment', header: 'Сегмент', render: (r) => <span className="text-muted-foreground">{r.segment}</span> },
-    { key: 'ltv', header: 'LTV', align: 'right', render: (r) => <span className="font-medium text-foreground">{currency(r.ltv)}</span> },
+    {
+      key: 'ltv',
+      header: 'LTV',
+      align: 'right',
+      render: (r) => (
+        <span className="font-medium text-foreground">
+          {formatMoney(r.ltv)}
+        </span>
+      ),
+    },
     { key: 'purchases', header: 'Покупки', align: 'right', render: (r) => <span className="text-muted-foreground">{r.purchases}</span> },
     { key: 'interval', header: 'Период.', align: 'right', render: (r) => <span className="text-muted-foreground">{r.interval ? `${r.interval} дн.` : '—'}</span> },
-    { key: 'avgCheck', header: 'Ср. чек', align: 'right', render: (r) => <span className="text-muted-foreground">{r.avgCheck} zł</span> },
-    { key: 'lastOrder', header: 'Последний', align: 'right', render: (r) => <span className="text-muted-foreground">{r.lastOrder}</span> },
-    { key: 'cashback', header: 'Кэшбэк', align: 'right', render: (r) => <span className="font-medium text-[hsl(255_100%_72%)]">{r.cashback} zł</span> },
+    {
+      key: 'avgCheck',
+      header: 'Ср. чек',
+      align: 'right',
+      render: (r) => (
+        <span className="text-muted-foreground">
+          {formatMoney(r.avgCheck)}
+        </span>
+      ),
+    },
+    {
+      key: 'lastOrder',
+      header: 'Последний',
+      align: 'right',
+      render: (r) => (
+        <span className="text-muted-foreground">
+          {formatLastOrder(r.lastOrder)}
+        </span>
+      ),
+    },
+    {
+      key: 'cashback',
+      header: 'Кэшбэк',
+      align: 'right',
+      render: (r) => (
+        <span className="font-medium text-[hsl(255_100%_72%)]">
+          {formatMoney(r.cashback)}
+        </span>
+      ),
+    },
   ];
 
   return (
@@ -130,7 +394,7 @@ export default function Customers() {
         <Pagination
           page={safePage}
           pageCount={pageCount}
-          total={filtered.length}
+          total={total}
           pageSize={PAGE_SIZE}
           onPageChange={setPage}
         />
@@ -152,15 +416,30 @@ function CustomerMobileRow({ r }) {
       </div>
       <div className="mt-3 border-t border-border-soft pt-3">
         <MetricGrid cols={3} items={[
-          { label: 'LTV', value: currency(r.ltv), className: 'text-foreground' },
+          {
+            label: 'LTV',
+            value: formatMoney(r.ltv),
+            className: 'text-foreground',
+          },
           { label: 'Покупки', value: r.purchases },
-          { label: 'Ср. чек', value: `${r.avgCheck} zł` },
+          {
+            label: 'Ср. чек',
+            value: formatMoney(r.avgCheck),
+          },
         ]} />
         <div className="mt-2.5">
           <MetricGrid cols={3} items={[
             { label: 'Период', value: r.interval ? `${r.interval} дн.` : '—' },
-            { label: 'Кэшбэк', value: `${r.cashback} zł`, className: 'text-[hsl(255_100%_72%)]' },
-            { label: 'Последний', value: r.lastOrder },
+            {
+              label: 'Кэшбэк',
+              value: formatMoney(r.cashback),
+              className: 'text-[hsl(255_100%_72%)]',
+            },
+
+            {
+              label: 'Последний',
+              value: formatLastOrder(r.lastOrder),
+            },
           ]} />
         </div>
         <div className="mt-2 text-[11px] text-muted-2">Сегмент: <span className="text-muted-foreground">{r.segment}</span></div>
