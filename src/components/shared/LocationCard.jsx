@@ -269,7 +269,16 @@ export default function LocationCard({
         />
       </div>
 
-      <div className="mt-2 font-heading text-[24px] font-semibold leading-none tabular-nums text-foreground">
+      <div
+        className={cn(
+          'mt-2 font-heading text-[24px] font-semibold leading-none tabular-nums',
+          metric === 'growth'
+            ? Number(location.revenueChange || 0) >= 0
+              ? 'text-[hsl(142_70%_58%)]'
+              : 'text-[hsl(0_72%_62%)]'
+            : 'text-foreground'
+        )}
+      >
         {view.value}
       </div>
 
