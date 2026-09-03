@@ -98,38 +98,98 @@ function CustomerChatLink({
     !telegramId
   ) {
     return (
-      <span className={className}>
+      <span
+        className={className}
+      >
         {label}
       </span>
     );
   }
 
-  if (username) {
-    return (
-      <a
-        href={`https://t.me/${encodeURIComponent(
+  const handleClick = (
+    event
+  ) => {
+    event.preventDefault();
+
+    if (username) {
+      window.open(
+        `https://t.me/${encodeURIComponent(
           username
-        )}`}
-        target="_blank"
-        rel="noreferrer"
-        className={`${className} hover:underline underline-offset-2`}
-        title={`Открыть чат с @${username}`}
-      >
-        {label}
-      </a>
+        )}`,
+        '_blank',
+        'noopener,noreferrer'
+      );
+
+      return;
+    }
+
+    const link =
+      `tg://user?id=${encodeURIComponent(
+        telegramId
+      )}`;
+
+    const startedAt =
+      Date.now();
+
+    let pageWasHidden =
+      false;
+
+    const handleVisibility =
+      () => {
+        if (
+          document.visibilityState ===
+          'hidden'
+        ) {
+          pageWasHidden =
+            true;
+        }
+      };
+
+    document.addEventListener(
+      'visibilitychange',
+      handleVisibility
     );
-  }
+
+    window.location.href =
+      link;
+
+    window.setTimeout(
+      () => {
+        document.removeEventListener(
+          'visibilitychange',
+          handleVisibility
+        );
+
+        const elapsed =
+          Date.now() -
+          startedAt;
+
+        if (
+          !pageWasHidden &&
+          elapsed >= 1000
+        ) {
+          window.alert(
+            `Не удалось открыть чат с клиентом ${label}.\n\n`
+          );
+        }
+      },
+      1300
+    );
+  };
 
   return (
-    <a
-      href={`tg://user?id=${encodeURIComponent(
-        telegramId
-      )}`}
-      className={`${className} hover:underline underline-offset-2`}
-      title={`Открыть Telegram по ID ${telegramId}`}
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`${className} text-left hover:underline underline-offset-2`}
+      title={
+        username
+          ? `Открыть чат с @${username}`
+          : `Открыть Telegram по ID ${telegramId}`
+      }
     >
       {label}
-    </a>
+    </button>
   );
 }
 
