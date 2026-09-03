@@ -206,7 +206,13 @@ export default function ProductPerformance({ data, loading = false }) {
       {/* Mobile list */}
       <div className="mt-4 space-y-2.5 md:hidden">
         {pageRows.map((p) => (
-          <ProductMobileRow key={p.id} p={p} />
+          <ProductMobileRow
+            key={p.id}
+            p={{
+              ...p,
+              repeat: p.repeatPercent,
+            }}
+          />
         ))}
       </div>
 
