@@ -11,14 +11,31 @@ const catIcon = {
   'Картриджи': Layers,
 };
 
+const productImageByKey = {
+  'vozol-prime-30-ml': '/products/vozol-prime-30-ml.png',
+};
+
 export default function ProductMobileRow({ p }) {
   const lowStock = p.days <= 2;
   const Icon = catIcon[p.category] || Package;
+  const imageSrc =
+  productImageByKey[p.productKey] ||
+  p.imageUrl ||
+  '';
   return (
     <div className="rounded-xl border border-border-soft bg-[hsl(232_26%_6%)] p-3.5">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(234_22%_18%)] to-[hsl(234_22%_10%)]">
-          <Icon className="h-4 w-4 text-[hsl(255_100%_72%)]" />
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(234_22%_18%)] to-[hsl(234_22%_10%)]">
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt={p.name}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <Icon className="h-4 w-4 text-[hsl(255_100%_72%)]" />
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="truncate text-[13px] font-medium text-foreground">{p.name}</div>
