@@ -54,6 +54,150 @@ function formatDateOnly(date) {
   return `${year}-${month}-${day}`;
 }
 
+function normalizeTelegramUsername(value) {
+  return String(value || '')
+    .trim()
+    .replace(/^@+/, '');
+}
+
+function getCustomerDisplay(row) {
+  const username =
+    normalizeTelegramUsername(
+      row?.username
+    );
+
+  if (username) {
+    return `@${username}`;
+  }
+
+  return String(
+    row?.customer ||
+      row?.telegramId ||
+      '—'
+  );
+}
+
+function CustomerChatLink({
+  row,
+  className = '',
+}) {
+  const username =
+    normalizeTelegramUsername(
+      row?.username
+    );
+
+  const telegramId = String(
+    row?.telegramId || ''
+  ).trim();
+
+  const label =
+    getCustomerDisplay(row);
+
+  if (
+    !username &&
+    !telegramId
+  ) {
+    return (
+      <span
+        className={className}
+      >
+        {label}
+      </span>
+    );
+  }
+
+  const handleClick = (
+    event
+  ) => {
+    event.preventDefault();
+
+    if (username) {
+      window.open(
+        `https://t.me/${encodeURIComponent(
+          username
+        )}`,
+        '_blank',
+        'noopener,noreferrer'
+      );
+
+      return;
+    }
+
+    const link =
+      `tg://user?id=${encodeURIComponent(
+        telegramId
+      )}`;
+
+    const startedAt =
+      Date.now();
+
+    let pageWasHidden =
+      false;
+
+    const handleVisibility =
+      () => {
+        if (
+          document.visibilityState ===
+          'hidden'
+        ) {
+          pageWasHidden =
+            true;
+        }
+      };
+
+    document.addEventListener(
+      'visibilitychange',
+      handleVisibility
+    );
+
+    window.location.href =
+      link;
+
+    window.setTimeout(
+      () => {
+        document.removeEventListener(
+          'visibilitychange',
+          handleVisibility
+        );
+
+        const elapsed =
+          Date.now() -
+          startedAt;
+
+        if (
+          !pageWasHidden &&
+          elapsed >= 1000
+        ) {
+          window.alert(
+            `Не удалось открыть чат с клиентом ${label}.\n\n` +
+              `Возможные причины:\n` +
+              `• пользователь запретил открытие чата по Telegram ID;\n` +
+              `• Telegram Desktop/Web не поддержал ссылку;\n` +
+              `• аккаунт пользователя недоступен или удалён.\n\n` +
+              `Telegram не сообщает браузеру точную причину отказа.`
+          );
+        }
+      },
+      1300
+    );
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`${className} text-left hover:underline underline-offset-2`}
+      title={
+        username
+          ? `Открыть чат с @${username}`
+          : `Открыть Telegram по ID ${telegramId}`
+      }
+    >
+      {label}
+    </button>
+  );
+}
+
 export default function Orders() {
   const { period, range } = usePeriod();
 
@@ -264,9 +408,10 @@ export default function Orders() {
       key: 'customer',
       header: 'Клиент',
       render: (r) => (
-        <span className="font-medium text-foreground">
-          {r.customer}
-        </span>
+        <CustomerChatLink
+          row={r}
+          className="font-medium text-foreground"
+        />
       ),
     },
 
@@ -475,7 +620,13 @@ function OrderMobileRow({
           </div>
 
           <div className="truncate text-[13px] font-medium text-foreground">
-            {r.customer}
+
+            <CustomerChatLink
+
+              row={r}
+
+            />
+
           </div>
 
           <div className="text-[11px] text-muted-2">
