@@ -78,8 +78,8 @@ export default function RetentionPanel({
           height="100%"
         >
           <RadialBarChart
-            innerRadius="76%"
-            outerRadius="96%"
+            innerRadius="82%"
+            outerRadius="98%"
             data={chartData}
             startAngle={90}
             endAngle={-270}
@@ -102,7 +102,7 @@ export default function RetentionPanel({
         </ResponsiveContainer>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-heading text-[30px] font-semibold leading-none tabular-nums text-foreground">
+          <span className="font-heading text-[24px] sm:text-[26px] font-semibold leading-none tracking-[-0.03em] tabular-nums text-foreground whitespace-nowrap">
             {loading
               ? '—'
               : percent(rate)}
