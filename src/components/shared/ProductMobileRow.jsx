@@ -13,6 +13,13 @@ const catIcon = {
 
 const productImageByKey = {
   'vozol-prime-30-ml': '/products/vozol-prime-30-ml.png',
+  'chaser-for-pods-30-ml': '/products/chaser-for-pods-30-ml.png',
+  'elf-duck-moon-40k': '/products/elf-duck-moon-40k.png',
+  'elfliq-30-ml': '/products/elfliq-30-ml.png',
+  'oxva-pod': '/products/oxva-pod.png',
+  'puffy-30-ml': '/products/puffy-30-ml.png',
+  'xros-5-mini-pod': '/products/xros-5-mini-pod.png',
+  'xros-cartridge': '/products/xros-cartridge.png',
 };
 
 export default function ProductMobileRow({ p }) {
