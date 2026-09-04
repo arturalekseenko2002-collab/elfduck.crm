@@ -1,6 +1,5 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { groups } from '@/lib/navConfig';
 
@@ -9,11 +8,17 @@ export default function Sidebar() {
     <aside className="hidden h-full w-[236px] shrink-0 flex-col border-r border-border bg-[hsl(232_28%_5%)] lg:flex">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(255_100%_68%)] to-[hsl(280_90%_60%)] glow-primary">
-          <Sparkles className="h-4 w-4 text-white" />
-        </div>
+<img
+
+  src="/elfduck-logo.png"
+
+  alt="ElfDuck"
+
+  className="h-8 w-8 rounded-lg object-contain"
+
+/>
         <div className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
-          ElfDuck
+          ELFDUCK
         </div>
       </div>
 
@@ -59,11 +64,11 @@ export default function Sidebar() {
       <div className="border-t border-border p-3">
         <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-[hsl(234_22%_11%/0.5)]">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(234_22%_18%)] to-[hsl(234_22%_12%)] text-[12px] font-semibold text-foreground">
-            АС
+            ED
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[13px] font-medium text-foreground">Алекс Соколов</div>
-            <div className="truncate text-[11px] text-muted-2">Администратор</div>
+            <div className="truncate text-[13px] font-medium text-foreground">Основа</div>
+            <div className="truncate text-[11px] text-muted-2">Менеджер</div>
           </div>
         </div>
       </div>
