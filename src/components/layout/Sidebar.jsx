@@ -10,7 +10,7 @@ export default function Sidebar() {
       <div className="flex items-center gap-2.5 px-5 py-5">
 <img
 
-  src="/elfduck-logo.png"
+  src="/public/elfduck-logo.png"
 
   alt="ElfDuck"
 
