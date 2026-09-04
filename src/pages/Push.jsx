@@ -1041,6 +1041,9 @@ const removeMedia =
                     photoUrl:
                       '',
 
+                      photoFileId:
+                        photoFileId,
+
                     buttonText:
                       '',
 
@@ -1375,6 +1378,11 @@ if (error?.status === 401) {
         template.promo ||
           ''
       );
+
+      setPhotoFileId(
+  template.photoFileId ||
+    ''
+);
     };
 
   /*
