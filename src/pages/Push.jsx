@@ -47,16 +47,20 @@ async function crmFetch(path, options = {}) {
     .json()
     .catch(() => ({}));
 
-  if (
-    !response.ok ||
-    data?.ok === false
-  ) {
-    throw new Error(
-      data?.error ||
-        data?.message ||
-        'CRM_REQUEST_FAILED'
-    );
-  }
+if (
+  !response.ok ||
+  data?.ok === false
+) {
+  const error = new Error(
+    data?.error ||
+      data?.message ||
+      'CRM_REQUEST_FAILED'
+  );
+
+  error.status = response.status;
+
+  throw error;
+}
 
   return data;
 }
@@ -215,6 +219,164 @@ const loginMutation = useMutation({
           ? 'Неверный пароль'
           : error?.message ||
             'Ошибка авторизации',
+
+      variant: 'destructive',
+    });
+  },
+});
+
+const createTemplateMutation = useMutation({
+  mutationFn: () =>
+    crmFetch('/crm/push/templates', {
+      method: 'POST',
+
+      body: JSON.stringify({
+        title: tplName.trim(),
+        text: body.trim(),
+        photoUrl: '',
+        buttonText: '',
+        buttonUrl: '',
+      }),
+    }),
+
+  onSuccess: async () => {
+    setTplModalOpen(false);
+    setTplName('');
+
+    await queryClient.invalidateQueries({
+      queryKey: ['crm-push-templates'],
+    });
+
+    toast({
+      title: 'Шаблон создан',
+    });
+  },
+
+  onError: (error) => {
+    if (error?.status === 401) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    toast({
+      title: 'Не удалось создать шаблон',
+      description:
+        error?.message === 'TEMPLATE_ALREADY_EXISTS'
+          ? 'Шаблон с таким названием уже существует'
+          : error?.message || 'Ошибка сохранения шаблона',
+      variant: 'destructive',
+    });
+  },
+});
+
+const sendCampaignMutation = useMutation({
+  mutationFn: () => {
+    const params =
+      new URLSearchParams(
+        periodQuery
+      );
+
+    return crmFetch(
+      '/crm/push/send',
+      {
+        method: 'POST',
+
+        body: JSON.stringify({
+          period:
+            params.get('period') ||
+            'month',
+
+          from:
+            params.get('from') ||
+            '',
+
+          to:
+            params.get('to') ||
+            '',
+
+          name:
+            title.trim() ||
+            'Рассылка',
+
+          audience,
+
+          statuses:
+            Array.from(statuses),
+
+          categoryKeys:
+            Array.from(categories),
+
+          locationKeys:
+            Array.from(locations),
+
+          minCheck:
+            Number(
+              minCheck || 0
+            ),
+
+          minCashback:
+            Number(
+              minCashback || 0
+            ),
+
+          favProduct:
+            favProduct.trim(),
+
+          telegram:
+            telegram.trim(),
+
+          title:
+            title.trim(),
+
+          text:
+            body.trim(),
+
+          promo:
+            promo.trim(),
+
+          photoUrl: '',
+          buttonText: '',
+          buttonUrl: '',
+
+          templateId:
+            activeTpl || null,
+        }),
+      }
+    );
+  },
+
+  onSuccess: async (data) => {
+    await queryClient.invalidateQueries({
+      queryKey: [
+        'crm-push-campaigns',
+      ],
+    });
+
+    toast({
+      title: 'Рассылка запущена',
+
+      description:
+        `Получателей: ${
+          data?.campaign?.recipients ||
+          recipients
+        }`,
+    });
+  },
+
+  onError: (error) => {
+    if (error?.status === 401) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    toast({
+      title: 'Не удалось запустить рассылку',
+
+      description:
+        error?.message === 'AUDIENCE_EMPTY'
+          ? 'По выбранным фильтрам нет получателей'
+          : error?.message ||
+            'Ошибка отправки',
 
       variant: 'destructive',
     });
@@ -495,34 +657,47 @@ const openCreateTpl = () => {
 };
 
 const confirmCreateTpl = () => {
-  toast({
-    title:
-      'Создание шаблонов подключим после авторизации CRM',
-  });
+  if (!isAuthenticated) {
+    setAuthModalOpen(true);
+    return;
+  }
+
+  if (
+    !tplName.trim() ||
+    !body.trim() ||
+    createTemplateMutation.isPending
+  ) {
+    return;
+  }
+
+  createTemplateMutation.mutate();
 };
 
 const sendCampaign = () => {
-
   if (!isAuthenticated) {
-
     setAuthModalOpen(true);
-
     return;
-
   }
 
-  toast({
+  if (
+    recipients <= 0 ||
+    sendCampaignMutation.isPending
+  ) {
+    return;
+  }
 
-    title:
+  const confirmed =
+    window.confirm(
+      `Отправить рассылку ${num(
+        recipients
+      )} получателям?`
+    );
 
-      'Авторизация работает',
+  if (!confirmed) {
+    return;
+  }
 
-    description:
-
-      'Следующим шагом подключаем реальную отправку рассылки.',
-
-  });
-
+  sendCampaignMutation.mutate();
 };
 
   const analyticsColumns = [
@@ -722,20 +897,55 @@ const sendCampaign = () => {
           <div className="mt-auto space-y-2 pt-5">
             <button
               onClick={openCreateTpl}
+              disabled={
+
+  !tplName.trim() ||
+
+  !body.trim() ||
+
+  createTemplateMutation.isPending
+
+}
               className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
             >
-              <Save className="h-4 w-4" /> Создать шаблон
+              <Save className="h-4 w-4" /> {createTemplateMutation.isPending
+
+  ? 'Создаём…'
+
+  : 'Создать шаблон'}
             </button>
             <button
+
               onClick={sendCampaign}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[hsl(255_100%_68%)] to-[hsl(280_90%_60%)] px-4 py-2 text-[13px] font-medium text-white shadow-[0_4px_20px_-6px_hsl(255_100%_68%)]"
+
+              disabled={
+
+                recipients <= 0 ||
+
+                audiencePreviewLoading ||
+
+                sendCampaignMutation.isPending
+
+              }
+
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[hsl(255_100%_68%)] to-[hsl(280_90%_60%)] px-4 py-2 text-[13px] font-medium text-white shadow-[0_4px_20px_-6px_hsl(255_100%_68%)] disabled:cursor-not-allowed disabled:opacity-50"
+
             >
-              <Send className="h-4 w-4" />
-Отправить (
-{audiencePreviewLoading
-  ? '…'
-  : num(recipients)}
-)
+<Send className="h-4 w-4" />
+
+{sendCampaignMutation.isPending
+
+  ? 'Запускаем…'
+
+  : `Отправить (${
+
+      audiencePreviewLoading
+
+        ? '…'
+
+        : num(recipients)
+
+    })`}
             </button>
           </div>
         </div>
