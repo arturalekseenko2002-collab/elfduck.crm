@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { X, Sparkles } from 'lucide-react';
+import { X } from 'lucide-react';
 import { groups } from '@/lib/navConfig';
 import { cn } from '@/lib/utils';
 
@@ -20,10 +20,20 @@ export default function MobileNav({ open, onClose }) {
         {/* Logo + close */}
         <div className="flex items-center justify-between px-5 py-5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(255_100%_68%)] to-[hsl(280_90%_60%)] glow-primary">
-              <Sparkles className="h-4 w-4 text-white" />
-            </div>
-            <div className="font-heading text-[16px] font-semibold tracking-tight text-foreground">ElfDuck</div>
+<div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg">
+
+  <img
+
+    src="/elfduck-logo.png"
+
+    alt="ElfDuck"
+
+    className="h-full w-full object-cover"
+
+  />
+
+</div>
+            <div className="font-heading text-[16px] font-semibold tracking-tight text-foreground">ELFDUCK</div>
           </div>
           <button
             onClick={onClose}
@@ -73,11 +83,11 @@ export default function MobileNav({ open, onClose }) {
         <div className="border-t border-border p-3">
           <div className="flex min-h-[44px] items-center gap-3 rounded-lg px-2 py-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(234_22%_18%)] to-[hsl(234_22%_12%)] text-[12px] font-semibold text-foreground">
-              АС
+              ED
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-medium text-foreground">Алекс Соколов</div>
-              <div className="truncate text-[11px] text-muted-2">Администратор</div>
+              <div className="truncate text-[13px] font-medium text-foreground">Основатель</div>
+              <div className="truncate text-[11px] text-muted-2">Менеджер</div>
             </div>
           </div>
         </div>
