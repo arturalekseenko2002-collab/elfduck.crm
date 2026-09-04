@@ -169,7 +169,7 @@ const periodQuery = useMemo(
 
 const {
   data: metaData,
-  isLoading: metaLoading,
+  // isLoading: metaLoading,
 } = useQuery({
   queryKey: [
     'crm-push-meta',
@@ -201,7 +201,7 @@ const pushMeta = {
 
 const {
   data: templatesData,
-  isLoading: templatesLoading,
+  // isLoading: templatesLoading,
 } = useQuery({
   queryKey: [
     'crm-push-templates',
@@ -219,7 +219,7 @@ const templates =
 
 const {
   data: campaignsData,
-  isLoading: campaignsLoading,
+  // isLoading: campaignsLoading,
 } = useQuery({
   queryKey: [
     'crm-push-campaigns',
@@ -338,17 +338,6 @@ const recipients =
       0
   );
 
-  // const [campPage, setCampPage] = useState(1);
-  // useEffect(() => { setCampPage(1); }, [period]);
-  // const filteredCampaigns = useMemo(() => {
-  //   if (!range) return pushCampaigns;
-  //   return pushCampaigns.filter((c) => {
-  //     const d = new Date('2026-08-27T12:00:00'); d.setDate(d.getDate() - c.daysAgo);
-  //     return d >= range.start && d <= range.end;
-  //   });
-  // }, [range]);
-  // const campPageCount = Math.max(1, Math.ceil(filteredCampaigns.length / 10));
-  // const safeCampPage = Math.min(campPage, campPageCount);
   const [
   campPage,
   setCampPage,
@@ -383,7 +372,7 @@ const campRows =
 
     safeCampPage * 10
   );
-  // const campRows = filteredCampaigns.slice((safeCampPage - 1) * 10, safeCampPage * 10);
+  
 
   const tplPageCount = Math.max(1, Math.ceil(templates.length / TPL_PAGE_SIZE));
   const safeTplPage = Math.min(tplPage, tplPageCount);
@@ -395,20 +384,6 @@ const campRows =
     setter(next);
   };
 
-  // const recipients = useMemo(() => {
-  //   let base = audience === 'Лиды' ? 38 : audience === 'Избранные' ? 42 : 284;
-  //   if (statuses.size) {
-  //     const f = { Активные: 0.62, Новые: 0.12, Спящие: 0.18 };
-  //     base = Math.round(base * [...statuses].reduce((a, s) => a + (f[s] || 0), 0));
-  //   }
-  //   if (categories.size) base = Math.round(base * (0.35 * categories.size));
-  //   if (locations.size) base = Math.round(base * (0.3 * locations.size));
-  //   if (minCheck) base = Math.round(base * 0.6);
-  //   if (minCashback) base = Math.round(base * 0.5);
-  //   if (favProduct) base = Math.round(base * 0.4);
-  //   if (telegram) base = 1;
-  //   return Math.max(1, base);
-  // }, [audience, statuses, categories, locations, minCheck, minCashback, favProduct, telegram]);
 
 const applyTemplate = (t) => {
   setActiveTpl(t.id);
