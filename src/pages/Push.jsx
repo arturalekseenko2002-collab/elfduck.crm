@@ -91,12 +91,15 @@ async function crmFetch(path, options = {}) {
       );
     }
 
-    const error = new Error(
-      data?.error ||
-        data?.message ||
-        `HTTP_${response.status}`
-    );
+const error = new Error(
 
+  data?.message ||
+
+    data?.error ||
+
+    `HTTP_${response.status}`
+
+);
     error.status = response.status;
 
     throw error;
