@@ -8,15 +8,13 @@ export default function Sidebar() {
     <aside className="hidden h-full w-[236px] shrink-0 flex-col border-r border-border bg-[hsl(232_28%_5%)] lg:flex">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-5">
-<img
-
-  src="/elfduck-logo.png"
-
-  alt="ElfDuck"
-
-  className="h-8 w-8 rounded-lg object-contain"
-
-/>
+<div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg">
+  <img
+    src="/elfduck-logo.png"
+    alt="ElfDuck"
+    className="h-full w-full object-cover"
+  />
+</div>
         <div className="font-heading text-[16px] font-semibold tracking-tight text-foreground">
           ELFDUCK
         </div>
