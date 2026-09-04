@@ -67,7 +67,7 @@ export default function Sidebar() {
             ED
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[13px] font-medium text-foreground">Основа</div>
+            <div className="truncate text-[13px] font-medium text-foreground">Основатель</div>
             <div className="truncate text-[11px] text-muted-2">Менеджер</div>
           </div>
         </div>
