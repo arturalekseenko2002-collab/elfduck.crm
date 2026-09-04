@@ -94,7 +94,7 @@ async function crmFetch(path, options = {}) {
     const error = new Error(
       data?.error ||
         data?.message ||
-        'CRM_REQUEST_FAILED'
+        `HTTP_${response.status}`
     );
 
     error.status = response.status;
