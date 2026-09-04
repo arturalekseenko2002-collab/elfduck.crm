@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Send, Save, Smartphone, Paperclip, Layers } from 'lucide-react';
 import { currency, num } from '@/lib/mockData';
 import DataTable from '@/components/shared/DataTable';
@@ -35,6 +35,7 @@ async function crmFetch(path, options = {}) {
     `${CRM_API_URL}${path}`,
     {
       ...options,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...(options.headers || {}),
@@ -138,6 +139,13 @@ function CampaignMobileRow({ r }) {
 }
 
 export default function Push() {
+    const queryClient = useQueryClient();
+
+  const [authModalOpen, setAuthModalOpen] =
+    useState(false);
+
+  const [authPassword, setAuthPassword] =
+    useState('');
   const [audience, setAudience] = useState('all');
   const [statuses, setStatuses] = useState(new Set());
   const [categories, setCategories] = useState(new Set());
@@ -157,6 +165,77 @@ export default function Push() {
   const [tplName, setTplName] = useState('');
 
   const { period, range } = usePeriod();
+  const {
+  data: sessionData,
+  isLoading: sessionLoading,
+} = useQuery({
+  queryKey: ['crm-auth-session'],
+
+  queryFn: () =>
+    crmFetch('/crm/auth/session'),
+
+  retry: false,
+});
+
+const isAuthenticated =
+  sessionData?.authenticated === true;
+
+const loginMutation = useMutation({
+  mutationFn: (password) =>
+    crmFetch('/crm/auth/login', {
+      method: 'POST',
+
+      body: JSON.stringify({
+        password,
+      }),
+    }),
+
+  onSuccess: async () => {
+    setAuthPassword('');
+    setAuthModalOpen(false);
+
+    await queryClient.invalidateQueries({
+      queryKey: [
+        'crm-auth-session',
+      ],
+    });
+
+    toast({
+      title: 'CRM авторизована',
+    });
+  },
+
+  onError: (error) => {
+    toast({
+      title: 'Не удалось войти',
+
+      description:
+        error?.message ===
+        'INVALID_CRM_PASSWORD'
+          ? 'Неверный пароль'
+          : error?.message ||
+            'Ошибка авторизации',
+
+      variant: 'destructive',
+    });
+  },
+});
+
+const submitCrmLogin = () => {
+  const password =
+    authPassword.trim();
+
+  if (
+    !password ||
+    loginMutation.isPending
+  ) {
+    return;
+  }
+
+  loginMutation.mutate(
+    password
+  );
+};
 
 const periodQuery = useMemo(
   () =>
@@ -405,10 +484,15 @@ const applyTemplate = (t) => {
   );
 };
 
-  const openCreateTpl = () => {
-    setTplName(title || '');
-    setTplModalOpen(true);
-  };
+const openCreateTpl = () => {
+  if (!isAuthenticated) {
+    setAuthModalOpen(true);
+    return;
+  }
+
+  setTplName(title || '');
+  setTplModalOpen(true);
+};
 
 const confirmCreateTpl = () => {
   toast({
@@ -417,13 +501,28 @@ const confirmCreateTpl = () => {
   });
 };
 
-  const sendCampaign = () => {
+const sendCampaign = () => {
+
+  if (!isAuthenticated) {
+
+    setAuthModalOpen(true);
+
+    return;
+
+  }
+
   toast({
+
     title:
-      'Отправка пока заблокирована',
+
+      'Авторизация работает',
+
     description:
-      'Сначала подключим безопасную авторизацию CRM.',
+
+      'Следующим шагом подключаем реальную отправку рассылки.',
+
   });
+
 };
 
   const analyticsColumns = [
@@ -701,6 +800,76 @@ const confirmCreateTpl = () => {
           onPageChange={setCampPage}
         />
       </div>
+
+      <Dialog
+  open={authModalOpen}
+  onOpenChange={
+    setAuthModalOpen
+  }
+>
+  <DialogContent className="max-w-sm w-[calc(100%-1.5rem)]">
+    <DialogHeader>
+      <DialogTitle>
+        Вход в CRM
+      </DialogTitle>
+    </DialogHeader>
+
+    <div className="space-y-3 py-2">
+      <div>
+        <label className="text-[11px] uppercase tracking-wider text-muted-2">
+          Пароль администратора
+        </label>
+
+        <input
+          type="password"
+          value={authPassword}
+          onChange={(e) =>
+            setAuthPassword(
+              e.target.value
+            )
+          }
+          onKeyDown={(e) => {
+            if (
+              e.key === 'Enter'
+            ) {
+              submitCrmLogin();
+            }
+          }}
+          className="input-base mt-1.5"
+          autoFocus
+        />
+      </div>
+    </div>
+
+    <DialogFooter>
+      <button
+        onClick={() =>
+          setAuthModalOpen(
+            false
+          )
+        }
+        className="inline-flex items-center rounded-lg border border-border px-4 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+      >
+        Отмена
+      </button>
+
+      <button
+        onClick={
+          submitCrmLogin
+        }
+        disabled={
+          !authPassword.trim() ||
+          loginMutation.isPending
+        }
+        className="inline-flex items-center rounded-lg bg-gradient-to-r from-[hsl(255_100%_68%)] to-[hsl(280_90%_60%)] px-4 py-2 text-[13px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {loginMutation.isPending
+          ? 'Входим…'
+          : 'Войти'}
+      </button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 
       {/* Create template modal */}
       <Dialog open={tplModalOpen} onOpenChange={setTplModalOpen}>
