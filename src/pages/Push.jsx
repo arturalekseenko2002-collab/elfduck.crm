@@ -385,6 +385,14 @@ const [
 ] = useState('');
 
 const [
+
+  templatePhotoPreviewUrl,
+
+  setTemplatePhotoPreviewUrl,
+
+] = useState('');
+
+const [
   mediaUploading,
   setMediaUploading,
 ] = useState(false);
@@ -799,11 +807,25 @@ onSuccess: (data) => {
 
     useEffect(() => {
   return () => {
-    if (mediaPreviewUrl) {
-      URL.revokeObjectURL(
-        mediaPreviewUrl
-      );
-    }
+if (
+
+  mediaPreviewUrl &&
+
+  mediaPreviewUrl.startsWith(
+
+    'blob:'
+
+  )
+
+) {
+
+  URL.revokeObjectURL(
+
+    mediaPreviewUrl
+
+  );
+
+}
   };
 }, [mediaPreviewUrl]);
 
@@ -954,6 +976,13 @@ const selectMedia =
         )
       );
 
+      setTemplatePhotoPreviewUrl(
+  String(
+    data?.photoPreviewUrl ||
+      ''
+  )
+);
+
       toast({
         title:
           'Медиа добавлено',
@@ -1013,6 +1042,7 @@ const removeMedia =
     setMediaFile(null);
     setMediaPreviewUrl('');
     setPhotoFileId('');
+    setTemplatePhotoPreviewUrl('');
   };
 
   /*
@@ -1043,6 +1073,10 @@ const removeMedia =
 
                       photoFileId:
                         photoFileId,
+
+photoPreviewUrl:
+
+  templatePhotoPreviewUrl,
 
                     buttonText:
                       '',
@@ -1379,8 +1413,31 @@ if (error?.status === 401) {
           ''
       );
 
-      setPhotoFileId(
+setPhotoFileId(
   template.photoFileId ||
+    ''
+);
+
+setTemplatePhotoPreviewUrl(
+  template.photoPreviewUrl ||
+    ''
+);
+
+setMediaFile(null);
+
+if (
+  mediaPreviewUrl &&
+  mediaPreviewUrl.startsWith(
+    'blob:'
+  )
+) {
+  URL.revokeObjectURL(
+    mediaPreviewUrl
+  );
+}
+
+setMediaPreviewUrl(
+  template.photoPreviewUrl ||
     ''
 );
     };
