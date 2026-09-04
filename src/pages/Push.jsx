@@ -270,6 +270,11 @@ export default function Push() {
     setAuthPassword,
   ] = useState('');
 
+  const [
+  pendingAuthAction,
+  setPendingAuthAction,
+] = useState(null);
+
   /*
    * AUDIENCE
    */
@@ -455,30 +460,37 @@ export default function Push() {
             }
           ),
 
-      onSuccess:
-        async () => {
-          setAuthPassword(
-            ''
-          );
+onSuccess: () => {
+  queryClient.setQueryData(
+    ['crm-auth-session'],
+    {
+      ok: true,
+      authenticated: true,
+    }
+  );
 
-          setAuthModalOpen(
-            false
-          );
+  setAuthPassword('');
+  setAuthModalOpen(false);
 
-          await queryClient
-            .invalidateQueries(
-              {
-                queryKey: [
-                  'crm-auth-session',
-                ],
-              }
-            );
+  toast({
+    title: 'CRM авторизована',
+  });
 
-          toast({
-            title:
-              'CRM авторизована',
-          });
-        },
+  const action = pendingAuthAction;
+
+  setPendingAuthAction(null);
+
+  if (action === 'create-template') {
+    setTplName(title || '');
+    setTplModalOpen(true);
+  }
+
+  if (action === 'send-campaign') {
+    setTimeout(() => {
+      sendCampaignMutation.mutate();
+    }, 0);
+  }
+},
 
       onError:
         (error) => {
@@ -792,28 +804,23 @@ export default function Push() {
 
       onError:
         (error) => {
-          if (
-            error?.status ===
-            401
-          ) {
-            queryClient
-              .setQueryData(
-                [
-                  'crm-auth-session',
-                ],
-                {
-                  ok: true,
-                  authenticated:
-                    false,
-                }
-              );
+if (error?.status === 401) {
+  queryClient.setQueryData(
+    ['crm-auth-session'],
+    {
+      ok: true,
+      authenticated: false,
+    }
+  );
 
-            setAuthModalOpen(
-              true
-            );
+  setPendingAuthAction(
+    'create-template'
+  );
 
-            return;
-          }
+  setAuthModalOpen(true);
+
+  return;
+}
 
           toast({
             title:
@@ -1096,52 +1103,47 @@ export default function Push() {
    * уже внутри модального окна.
    */
 
-  const openCreateTpl =
-    () => {
-      if (
-        !isAuthenticated
-      ) {
-        setAuthModalOpen(
-          true
-        );
+const openCreateTpl = () => {
+  if (!isAuthenticated) {
+    setPendingAuthAction(
+      'create-template'
+    );
 
-        return;
-      }
+    setAuthModalOpen(true);
 
-      setTplName(
-        title ||
-          ''
-      );
+    return;
+  }
 
-      setTplModalOpen(
-        true
-      );
-    };
+  setTplName(
+    title || ''
+  );
 
-  const confirmCreateTpl =
-    () => {
-      if (
-        !isAuthenticated
-      ) {
-        setAuthModalOpen(
-          true
-        );
+  setTplModalOpen(true);
+};
 
-        return;
-      }
+const confirmCreateTpl = () => {
+  if (!isAuthenticated) {
+    setPendingAuthAction(
+      'create-template'
+    );
 
-      if (
-        !tplName.trim() ||
-        !body.trim() ||
-        createTemplateMutation
-          .isPending
-      ) {
-        return;
-      }
+    setTplModalOpen(false);
 
-      createTemplateMutation
-        .mutate();
-    };
+    setAuthModalOpen(true);
+
+    return;
+  }
+
+  if (
+    !tplName.trim() ||
+    !body.trim() ||
+    createTemplateMutation.isPending
+  ) {
+    return;
+  }
+
+  createTemplateMutation.mutate();
+};
 
   const sendCampaign =
     () => {
