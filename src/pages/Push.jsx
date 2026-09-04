@@ -367,6 +367,26 @@ export default function Push() {
   ] = useState('');
 
   const [
+  mediaFile,
+  setMediaFile,
+] = useState(null);
+
+const [
+  mediaPreviewUrl,
+  setMediaPreviewUrl,
+] = useState('');
+
+const [
+  photoFileId,
+  setPhotoFileId,
+] = useState('');
+
+const [
+  mediaUploading,
+  setMediaUploading,
+] = useState(false);
+
+  const [
     activeTpl,
     setActiveTpl,
   ] = useState(null);
@@ -774,6 +794,224 @@ onSuccess: (data) => {
         0
     );
 
+    useEffect(() => {
+  return () => {
+    if (mediaPreviewUrl) {
+      URL.revokeObjectURL(
+        mediaPreviewUrl
+      );
+    }
+  };
+}, [mediaPreviewUrl]);
+
+const fileToDataUrl =
+  (file) =>
+    new Promise(
+      (
+        resolve,
+        reject
+      ) => {
+        const reader =
+          new FileReader();
+
+        reader.onload =
+          () =>
+            resolve(
+              String(
+                reader.result ||
+                  ''
+              )
+            );
+
+        reader.onerror =
+          () =>
+            reject(
+              new Error(
+                'FILE_READ_FAILED'
+              )
+            );
+
+        reader
+          .readAsDataURL(
+            file
+          );
+      }
+    );
+
+const selectMedia =
+  async (event) => {
+    const file =
+      event.target
+        .files?.[0];
+
+    event.target.value =
+      '';
+
+    if (!file) {
+      return;
+    }
+
+    const allowed = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+    ];
+
+    if (
+      !allowed.includes(
+        file.type
+      )
+    ) {
+      toast({
+        title:
+          'Неверный формат',
+
+        description:
+          'Можно загрузить JPG, PNG или WEBP',
+
+        variant:
+          'destructive',
+      });
+
+      return;
+    }
+
+    if (
+      file.size >
+      10 * 1024 * 1024
+    ) {
+      toast({
+        title:
+          'Файл слишком большой',
+
+        description:
+          'Максимальный размер — 10 МБ',
+
+        variant:
+          'destructive',
+      });
+
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setAuthModalOpen(
+        true
+      );
+
+      return;
+    }
+
+    setMediaUploading(
+      true
+    );
+
+    try {
+      const dataUrl =
+        await fileToDataUrl(
+          file
+        );
+
+      const data =
+        await crmFetch(
+          '/crm/push/upload-media',
+          {
+            method:
+              'POST',
+
+            body:
+              JSON.stringify({
+                dataUrl,
+              }),
+          }
+        );
+
+      if (
+        mediaPreviewUrl
+      ) {
+        URL.revokeObjectURL(
+          mediaPreviewUrl
+        );
+      }
+
+      setMediaFile(
+        file
+      );
+
+      setMediaPreviewUrl(
+        URL.createObjectURL(
+          file
+        )
+      );
+
+      setPhotoFileId(
+        String(
+          data?.fileId ||
+            ''
+        )
+      );
+
+      toast({
+        title:
+          'Медиа добавлено',
+      });
+    } catch (error) {
+      if (
+        error?.status ===
+        401
+      ) {
+        queryClient
+          .setQueryData(
+            [
+              'crm-auth-session',
+            ],
+            {
+              ok: true,
+              authenticated:
+                false,
+            }
+          );
+
+        setAuthModalOpen(
+          true
+        );
+
+        return;
+      }
+
+      toast({
+        title:
+          'Не удалось загрузить изображение',
+
+        description:
+          error?.message ||
+          'Ошибка загрузки',
+
+        variant:
+          'destructive',
+      });
+    } finally {
+      setMediaUploading(
+        false
+      );
+    }
+  };
+
+const removeMedia =
+  () => {
+    if (
+      mediaPreviewUrl
+    ) {
+      URL.revokeObjectURL(
+        mediaPreviewUrl
+      );
+    }
+
+    setMediaFile(null);
+    setMediaPreviewUrl('');
+    setPhotoFileId('');
+  };
+
   /*
    * CREATE TEMPLATE
    */
@@ -947,6 +1185,9 @@ if (error?.status === 401) {
 
                     photoUrl:
                       '',
+                      photoFileId:
+
+  photoFileId,
 
                     buttonText:
                       '',
@@ -1718,13 +1959,53 @@ const confirmCreateTpl = () => {
               />
             </Field>
 
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-[12px] text-muted-foreground hover:text-foreground"
-            >
-              <Paperclip className="h-3.5 w-3.5" />
-              Медиа
-            </button>
+<div className="space-y-2">
+  <label
+    className={cn(
+      'inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-[12px] text-muted-foreground hover:text-foreground',
+
+      mediaUploading &&
+        'pointer-events-none opacity-50'
+    )}
+  >
+    <Paperclip className="h-3.5 w-3.5" />
+
+    {mediaUploading
+      ? 'Загрузка…'
+      : mediaFile
+        ? 'Заменить медиа'
+        : 'Медиа'}
+
+    <input
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      onChange={
+        selectMedia
+      }
+      className="hidden"
+    />
+  </label>
+
+  {mediaFile && (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border-soft bg-[hsl(232_26%_6%)] px-3 py-2">
+      <span className="min-w-0 truncate text-[11px] text-muted-foreground">
+        {
+          mediaFile.name
+        }
+      </span>
+
+      <button
+        type="button"
+        onClick={
+          removeMedia
+        }
+        className="shrink-0 text-[11px] text-muted-2 hover:text-foreground"
+      >
+        Удалить
+      </button>
+    </div>
+  )}
+</div>
           </div>
         </div>
 
@@ -1745,6 +2026,15 @@ const confirmCreateTpl = () => {
               </div>
 
               <div className="mt-2 rounded-xl bg-[hsl(234_22%_11%)] p-3">
+                {mediaPreviewUrl && (
+  <img
+    src={
+      mediaPreviewUrl
+    }
+    alt="Медиа рассылки"
+    className="mb-2 max-h-40 w-full rounded-lg object-cover"
+  />
+)}
                 <div className="text-[12px] font-semibold text-foreground">
                   {title ||
                     'Заголовок'}
