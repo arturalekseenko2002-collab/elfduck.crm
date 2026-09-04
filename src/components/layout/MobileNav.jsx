@@ -24,7 +24,7 @@ export default function MobileNav({ open, onClose }) {
 
   <img
 
-    src="/elfduck-logo.png"
+    src="/products/elfduck-logo.png"
 
     alt="ElfDuck"
 
