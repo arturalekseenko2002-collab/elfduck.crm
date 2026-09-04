@@ -51,6 +51,11 @@ const PERIOD_MAP = {
 };
 
 async function crmFetch(path, options = {}) {
+  const sessionToken =
+    sessionStorage.getItem(
+      'elfduck_crm_session'
+    ) || '';
+
   const response = await fetch(
     `${CRM_API_URL}${path}`,
     {
@@ -60,6 +65,13 @@ async function crmFetch(path, options = {}) {
 
       headers: {
         'Content-Type': 'application/json',
+
+        ...(sessionToken
+          ? {
+              'x-crm-session': sessionToken,
+            }
+          : {}),
+
         ...(options.headers || {}),
       },
     }
@@ -73,6 +85,12 @@ async function crmFetch(path, options = {}) {
     !response.ok ||
     data?.ok === false
   ) {
+    if (response.status === 401) {
+      sessionStorage.removeItem(
+        'elfduck_crm_session'
+      );
+    }
+
     const error = new Error(
       data?.error ||
         data?.message ||
@@ -460,7 +478,14 @@ export default function Push() {
             }
           ),
 
-onSuccess: () => {
+onSuccess: (data) => {
+  if (data?.sessionToken) {
+    sessionStorage.setItem(
+      'elfduck_crm_session',
+      data.sessionToken
+    );
+  }
+
   queryClient.setQueryData(
     ['crm-auth-session'],
     {
@@ -476,16 +501,24 @@ onSuccess: () => {
     title: 'CRM авторизована',
   });
 
-  const action = pendingAuthAction;
+  const action =
+    pendingAuthAction;
 
   setPendingAuthAction(null);
 
-  if (action === 'create-template') {
-    setTplName(title || '');
+  if (
+    action === 'create-template'
+  ) {
+    setTplName(
+      title || ''
+    );
+
     setTplModalOpen(true);
   }
 
-  if (action === 'send-campaign') {
+  if (
+    action === 'send-campaign'
+  ) {
     setTimeout(() => {
       sendCampaignMutation.mutate();
     }, 0);
@@ -805,6 +838,11 @@ onSuccess: () => {
       onError:
         (error) => {
 if (error?.status === 401) {
+  sessionStorage.removeItem(
+
+  'elfduck_crm_session'
+
+);
   queryClient.setQueryData(
     ['crm-auth-session'],
     {
