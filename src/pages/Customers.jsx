@@ -6,8 +6,17 @@ import {
 } from '@tanstack/react-query';
 
 import {
+
   Search,
+
   Star,
+
+  ArrowUpDown,
+
+  ArrowUp,
+
+  ArrowDown,
+
 } from 'lucide-react';
 import DataTable from '@/components/shared/DataTable';
 import Badge from '@/components/shared/Badge';
@@ -106,6 +115,9 @@ export default function Customers() {
   const [status, setStatus] = useState('all');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
+  const [sortKey, setSortKey] = useState('');
+  const [sortDirection, setSortDirection] =
+    useState('desc');
   const [authOpen, setAuthOpen] = useState(false);
 
 const [authPassword, setAuthPassword] = useState('');
@@ -178,6 +190,26 @@ const requestQuery =
       status
     );
 
+    if (sortKey) {
+
+  params.set(
+
+    'sortKey',
+
+    sortKey
+
+  );
+
+  params.set(
+
+    'sortDirection',
+
+    sortDirection
+
+  );
+
+}
+
     const trimmedQuery =
       query.trim();
 
@@ -194,14 +226,27 @@ const requestQuery =
     page,
     status,
     query,
+    sortKey,
+
+sortDirection,
   ]);
 
 useEffect(() => {
+
   setPage(1);
+
 }, [
+
   baseQueryString,
+
   status,
+
   query,
+
+  sortKey,
+
+  sortDirection,
+
 ]);
 
 const {
@@ -451,6 +496,30 @@ const pageRows =
     ? data.rows
     : [];
 
+//     const sortedPageRows = useMemo(() => {
+//   if (!sortKey) {
+//     return pageRows;
+//   }
+
+//   return [...pageRows].sort((a, b) => {
+//     const left = Number(
+//       a?.[sortKey] || 0
+//     );
+
+//     const right = Number(
+//       b?.[sortKey] || 0
+//     );
+
+//     return sortDirection === 'asc'
+//       ? left - right
+//       : right - left;
+//   });
+// }, [
+//   pageRows,
+//   sortKey,
+//   sortDirection,
+// ]);
+
 const summaryData =
   data?.summary || {};
 
@@ -505,6 +574,44 @@ const summary = [
       ),
   },
 ];
+
+const toggleSort = (key) => {
+  if (sortKey === key) {
+    setSortDirection(
+      (current) =>
+        current === 'desc'
+          ? 'asc'
+          : 'desc'
+    );
+
+    return;
+  }
+
+  setSortKey(key);
+  setSortDirection('desc');
+};
+
+const renderSortableHeader =
+  (key, label) => (
+    <button
+      type="button"
+      onClick={() =>
+        toggleSort(key)
+      }
+      className="inline-flex items-center gap-1.5 whitespace-nowrap text-inherit transition-colors hover:text-foreground"
+    >
+      <span>{label}</span>
+
+      {sortKey !== key ? (
+        <ArrowUpDown className="h-3 w-3 text-muted-2" />
+      ) : sortDirection ===
+        'desc' ? (
+        <ArrowDown className="h-3 w-3 text-[hsl(255_100%_72%)]" />
+      ) : (
+        <ArrowUp className="h-3 w-3 text-[hsl(255_100%_72%)]" />
+      )}
+    </button>
+  );
 
   const columns = [
 {
@@ -564,7 +671,15 @@ const summary = [
     { key: 'segment', header: 'Сегмент', render: (r) => <span className="text-muted-foreground">{r.segment}</span> },
     {
       key: 'ltv',
-      header: 'LTV',
+      header:
+
+  renderSortableHeader(
+
+    'ltv',
+
+    'LTV'
+
+  ),
       align: 'right',
       render: (r) => (
         <span className="font-medium text-foreground">
@@ -572,11 +687,37 @@ const summary = [
         </span>
       ),
     },
-    { key: 'purchases', header: 'Покупки', align: 'right', render: (r) => <span className="text-muted-foreground">{r.purchases}</span> },
-    { key: 'interval', header: 'Период.', align: 'right', render: (r) => <span className="text-muted-foreground">{r.interval ? `${r.interval} дн.` : '—'}</span> },
     {
-      key: 'avgCheck',
-      header: 'Ср. чек',
+  key: 'purchases',
+
+  header:
+    renderSortableHeader(
+      'purchases',
+      'Покупки'
+    ),
+
+  align: 'right',
+
+  render: (r) => (
+    <span className="text-muted-foreground">
+      {r.purchases}
+    </span>
+  ),
+},
+    { key: 'interval', header: 'Период.', align: 'right', render: (r) => <span className="text-muted-foreground">{r.interval ? `${r.interval} дн.` : '—'}</span> },
+{
+
+  key: 'avgCheck',
+
+  header:
+
+    renderSortableHeader(
+
+      'avgCheck',
+
+      'Ср. чек'
+
+    ),
       align: 'right',
       render: (r) => (
         <span className="text-muted-foreground">
@@ -596,7 +737,15 @@ const summary = [
     },
     {
       key: 'cashback',
-      header: 'Кэшбэк',
+      header:
+
+  renderSortableHeader(
+
+    'cashback',
+
+    'Кэшбэк'
+
+  ),
       align: 'right',
       render: (r) => (
         <span className="font-medium text-[hsl(255_100%_72%)]">
@@ -644,7 +793,15 @@ const summary = [
 
       <div className="rounded-2xl surface-card p-2">
         <div className="hidden md:block">
-          <DataTable columns={columns} rows={pageRows} dense />
+          <DataTable
+
+  columns={columns}
+
+rows={pageRows}
+
+  dense
+
+/>
         </div>
         <div className="space-y-2.5 p-1 md:hidden">
           {pageRows.map((r) => (
