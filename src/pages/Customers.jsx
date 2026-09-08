@@ -1,6 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Search } from 'lucide-react';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+
+import {
+  Search,
+  Star,
+} from 'lucide-react';
 import DataTable from '@/components/shared/DataTable';
 import Badge from '@/components/shared/Badge';
 import Pagination from '@/components/shared/Pagination';
@@ -91,6 +99,10 @@ function Avatar({ name }) {
 
 export default function Customers() {
   const { period, range } = usePeriod();
+
+  const queryClient =
+    useQueryClient();
+
   const [status, setStatus] = useState('all');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -228,6 +240,94 @@ const {
   },
 });
 
+const favoriteMutation =
+  useMutation({
+    mutationFn: async ({
+      telegramId,
+      isFavorite,
+    }) => {
+      const sessionToken =
+        sessionStorage.getItem(
+          'elfduck_crm_session'
+        ) || '';
+
+      const response =
+        await fetch(
+          `${CRM_API_URL}/crm/customers/${encodeURIComponent(
+            telegramId
+          )}/favorite`,
+          {
+            method: 'PATCH',
+
+            credentials:
+              'include',
+
+            headers: {
+              'Content-Type':
+                'application/json',
+
+              ...(sessionToken
+                ? {
+                    'x-crm-session':
+                      sessionToken,
+                  }
+                : {}),
+            },
+
+            body:
+              JSON.stringify({
+                isFavorite,
+              }),
+          }
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(() => ({}));
+
+      if (
+        !response.ok ||
+        result?.ok === false
+      ) {
+        throw new Error(
+          result?.error ||
+            'CUSTOMER_FAVORITE_UPDATE_FAILED'
+        );
+      }
+
+      return result;
+    },
+
+    onSuccess: () => {
+      queryClient
+        .invalidateQueries({
+          queryKey: [
+            'crm-customers',
+          ],
+        });
+    },
+  });
+
+const toggleFavorite =
+  (row) => {
+    const telegramId =
+      String(
+        row?.telegramId || ''
+      ).trim();
+
+    if (!telegramId) {
+      return;
+    }
+
+    favoriteMutation.mutate({
+      telegramId,
+
+      isFavorite:
+        !row.isFavorite,
+    });
+  };
+
 const pageRows =
   Array.isArray(data?.rows)
     ? data.rows
@@ -289,17 +389,59 @@ const summary = [
 ];
 
   const columns = [
-    {
-      key: 'name', header: 'Клиент', render: (r) => (
-        <div className="flex items-center gap-3">
-          <Avatar name={r.name} />
-          <div>
-            <div className="font-medium text-foreground">{r.name}</div>
-            <div className="text-[11px] text-muted-2">{r.handle}</div>
-          </div>
+{
+  key: 'name',
+  header: 'Клиент',
+
+  render: (r) => (
+    <div className="flex items-center gap-2">
+
+      <button
+        type="button"
+
+        onClick={() =>
+          toggleFavorite(r)
+        }
+
+        title={
+          r.isFavorite
+            ? 'Убрать из избранных'
+            : 'Добавить в избранные'
+        }
+
+        className={cn(
+          'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-all',
+
+          r.isFavorite
+            ? 'text-amber-400 hover:bg-amber-400/10'
+            : 'text-muted-2 hover:bg-amber-400/10 hover:text-amber-400'
+        )}
+      >
+        <Star
+          className={cn(
+            'h-4 w-4',
+
+            r.isFavorite &&
+              'fill-current'
+          )}
+        />
+      </button>
+
+      <Avatar name={r.name} />
+
+      <div>
+        <div className="font-medium text-foreground">
+          {r.name}
         </div>
-      ),
-    },
+
+        <div className="text-[11px] text-muted-2">
+          {r.handle}
+        </div>
+      </div>
+
+    </div>
+  ),
+},
     { key: 'status', header: 'Статус', render: (r) => <Badge status={statusMap[r.status]} /> },
     { key: 'segment', header: 'Сегмент', render: (r) => <span className="text-muted-foreground">{r.segment}</span> },
     {
@@ -388,7 +530,19 @@ const summary = [
         </div>
         <div className="space-y-2.5 p-1 md:hidden">
           {pageRows.map((r) => (
-            <CustomerMobileRow key={r.id} r={r} />
+            <CustomerMobileRow
+
+              key={r.id}
+
+              r={r}
+
+              onToggleFavorite={
+
+                toggleFavorite
+
+              }
+
+            />
           ))}
         </div>
         <Pagination
@@ -403,11 +557,49 @@ const summary = [
   );
 }
 
-function CustomerMobileRow({ r }) {
+function CustomerMobileRow({
+
+  r,
+
+  onToggleFavorite,
+
+}) {
   return (
     <div className="rounded-xl border border-border-soft bg-[hsl(232_26%_6%)] p-3.5">
-      <div className="flex items-center gap-3">
-        <Avatar name={r.name} />
+      <div className="flex items-center gap-2">
+
+  <button
+    type="button"
+
+    onClick={() =>
+      onToggleFavorite(r)
+    }
+
+    title={
+      r.isFavorite
+        ? 'Убрать из избранных'
+        : 'Добавить в избранные'
+    }
+
+    className={cn(
+      'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-all',
+
+      r.isFavorite
+        ? 'text-amber-400'
+        : 'text-muted-2'
+    )}
+  >
+    <Star
+      className={cn(
+        'h-4 w-4',
+
+        r.isFavorite &&
+          'fill-current'
+      )}
+    />
+  </button>
+
+  <Avatar name={r.name} />
         <div className="min-w-0 flex-1">
           <div className="truncate text-[13px] font-medium text-foreground">{r.name}</div>
           <div className="truncate text-[11px] text-muted-2">{r.handle}</div>
