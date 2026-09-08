@@ -1,15 +1,25 @@
 import React, { useEffect, useMemo, useState } from 'react';
+
 import {
   useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+
 import {
+
   Layers,
+
   Paperclip,
+
   Save,
+
   Send,
+
   Smartphone,
+
+  Trash2,
+
 } from 'lucide-react';
 
 import { currency, num } from '@/lib/mockData';
@@ -1156,6 +1166,114 @@ if (error?.status === 401) {
         },
     });
 
+  const deleteTemplateMutation =
+  useMutation({
+    mutationFn: (templateId) =>
+      crmFetch(
+        `/crm/push/templates/${encodeURIComponent(
+          templateId
+        )}`,
+        {
+          method: 'DELETE',
+        }
+      ),
+
+    onSuccess: async (
+      _,
+      templateId
+    ) => {
+      if (
+        activeTpl ===
+        templateId
+      ) {
+        setActiveTpl(null);
+      }
+
+      await queryClient
+        .invalidateQueries({
+          queryKey: [
+            'crm-push-templates',
+          ],
+        });
+
+      toast({
+        title:
+          'Шаблон удалён',
+      });
+    },
+
+    onError: (error) => {
+      if (
+        error?.status === 401
+      ) {
+        sessionStorage.removeItem(
+          'elfduck_crm_session'
+        );
+
+        queryClient.setQueryData(
+          ['crm-auth-session'],
+          {
+            ok: true,
+            authenticated:
+              false,
+          }
+        );
+
+        setAuthModalOpen(true);
+        return;
+      }
+
+      toast({
+        title:
+          'Не удалось удалить шаблон',
+
+        description:
+          error?.message ||
+          'Ошибка удаления',
+
+        variant:
+          'destructive',
+      });
+    },
+  });
+
+const deleteTemplate =
+  (template) => {
+    const templateId =
+      String(
+        template?.id || ''
+      ).trim();
+
+    if (
+      !templateId ||
+      deleteTemplateMutation
+        .isPending
+    ) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        `Удалить шаблон «${
+          template?.title ||
+          template?.name ||
+          'Без названия'
+        }»?`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    deleteTemplateMutation
+      .mutate(templateId);
+  };
+
   /*
    * SEND CAMPAIGN
    */
@@ -2191,73 +2309,97 @@ const confirmCreateTpl = () => {
           </span>
         </div>
 
-        <div className="space-y-2 px-2 pb-2">
-          {tplRows.map(
-            (template) => (
-              <button
-                type="button"
-                key={
-                  template.id
-                }
-                onClick={() =>
-                  applyTemplate(
-                    template
-                  )
-                }
-                className={cn(
-                  'w-full rounded-lg border p-3 text-left transition-all',
+<div className="space-y-2 px-2 pb-2">
+  {tplRows.map(
+    (template) => (
+      <div
+        key={template.id}
+        className={cn(
+          'relative w-full rounded-lg border transition-all',
 
-                  activeTpl ===
-                    template.id
-                    ? 'border-[hsl(255_100%_68%/0.4)] bg-[hsl(255_100%_68%/0.08)]'
-                    : 'border-border-soft bg-[hsl(232_26%_6%)] hover:border-[hsl(255_100%_68%/0.25)]'
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] font-medium text-foreground">
-                    {template.name ||
-                      template.title ||
-                      'Шаблон'}
-                  </span>
-
-                  <span className="text-[11px] text-[hsl(255_100%_72%)]">
-                    {Number(
-                      template.conversion ||
-                        0
-                    )}
-                    % конв.
-                  </span>
-                </div>
-
-                <div className="mt-1 text-[12px] text-muted-foreground">
-                  {template.preview ||
-                    template.text ||
-                    ''}
-                </div>
-
-                <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-2">
-                  <span>
-                    Использован:{' '}
-                    {num(
-                      template.used ||
-                        0
-                    )}{' '}
-                    раз
-                  </span>
-
-                  {template.lastUsed && (
-                    <span>
-                      · Последний:{' '}
-                      {
-                        template.lastUsed
-                      }
-                    </span>
-                  )}
-                </div>
-              </button>
+          activeTpl ===
+            template.id
+            ? 'border-[hsl(255_100%_68%/0.4)] bg-[hsl(255_100%_68%/0.08)]'
+            : 'border-border-soft bg-[hsl(232_26%_6%)] hover:border-[hsl(255_100%_68%/0.25)]'
+        )}
+      >
+        {/* Выбор шаблона */}
+        <button
+          type="button"
+          onClick={() =>
+            applyTemplate(
+              template
             )
-          )}
-        </div>
+          }
+          className="w-full p-3 pr-12 text-left"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <span className="min-w-0 truncate text-[13px] font-medium text-foreground">
+              {template.name ||
+                template.title ||
+                'Шаблон'}
+            </span>
+
+            <span className="shrink-0 text-[11px] text-[hsl(255_100%_72%)]">
+              {Number(
+                template.conversion ||
+                  0
+              )}
+              % конв.
+            </span>
+          </div>
+
+          <div className="mt-1 text-[12px] text-muted-foreground">
+            {template.preview ||
+              template.text ||
+              ''}
+          </div>
+
+          <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-2">
+            <span>
+              Использован:{' '}
+              {num(
+                template.used ||
+                  0
+              )}{' '}
+              раз
+            </span>
+
+            {template.lastUsed && (
+              <span>
+                · Последний:{' '}
+                {
+                  template.lastUsed
+                }
+              </span>
+            )}
+          </div>
+        </button>
+
+        {/* Удаление шаблона */}
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+
+            deleteTemplate(
+              template
+            );
+          }}
+          disabled={
+            deleteTemplateMutation
+              .isPending
+          }
+          title="Удалить шаблон"
+          aria-label="Удалить шаблон"
+          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-2 transition-colors hover:border-red-400/30 hover:bg-red-400/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    )
+  )}
+</div>
 
         <Pagination
           page={
