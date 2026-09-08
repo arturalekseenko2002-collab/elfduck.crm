@@ -2331,7 +2331,7 @@ const confirmCreateTpl = () => {
               template
             )
           }
-          className="w-full p-3 pr-16 text-left"
+          className="w-full p-3 pr-14 text-left"
         >
           <div className="flex items-center justify-between gap-3">
             <span className="min-w-0 truncate text-[13px] font-medium text-foreground">
