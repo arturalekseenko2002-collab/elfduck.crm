@@ -478,25 +478,25 @@ export default function Partners() {
         ),
     },
 
-    {
-      key:
-        'ltv',
+    // {
+    //   key:
+    //     'ltv',
 
-      header:
-        'LTV клиентов',
+    //   header:
+    //     'LTV клиентов',
 
-      align:
-        'right',
+    //   align:
+    //     'right',
 
-      render:
-        (row) => (
-          <span className="text-muted-foreground">
-            {formatMoney(
-              row.ltv
-            )}
-          </span>
-        ),
-    },
+    //   render:
+    //     (row) => (
+    //       <span className="text-muted-foreground">
+    //         {formatMoney(
+    //           row.ltv
+    //         )}
+    //       </span>
+    //     ),
+    // },
 
     {
       key:
@@ -632,15 +632,23 @@ export default function Partners() {
             rows.map(
               (row) => (
                 <PartnerMobileRow
+
                   key={
+
                     row.id
+
                   }
+
                   p={
+
                     row
+
                   }
+
                   showName
+
                   showTrend
-                  showLtv
+
                 />
               )
             )}
