@@ -2392,7 +2392,7 @@ const confirmCreateTpl = () => {
           }
           title="Удалить шаблон"
           aria-label="Удалить шаблон"
-          className="absolute right-2 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-2 transition-colors hover:border-red-400/30 hover:bg-red-400/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-2 transition-colors hover:border-red-400/30 hover:bg-red-400/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
