@@ -465,7 +465,7 @@ export default function Cashback() {
 
     {
       label:
-        'Использовано',
+        'Использовано в %',
 
       value:
         `${Number(
