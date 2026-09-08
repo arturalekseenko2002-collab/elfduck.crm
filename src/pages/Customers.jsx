@@ -106,6 +106,15 @@ export default function Customers() {
   const [status, setStatus] = useState('all');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
+  const [authOpen, setAuthOpen] = useState(false);
+
+const [authPassword, setAuthPassword] = useState('');
+
+const [authError, setAuthError] = useState('');
+
+const [authLoading, setAuthLoading] = useState(false);
+
+const [pendingFavoriteRow, setPendingFavoriteRow] = useState(null);
 
 const baseQueryString = useMemo(() => {
   const periodKey =
@@ -258,9 +267,7 @@ const favoriteMutation =
           )}/favorite`,
           {
             method: 'PATCH',
-
-            credentials:
-              'include',
+            credentials: 'include',
 
             headers: {
               'Content-Type':
@@ -274,10 +281,9 @@ const favoriteMutation =
                 : {}),
             },
 
-            body:
-              JSON.stringify({
-                isFavorite,
-              }),
+            body: JSON.stringify({
+              isFavorite,
+            }),
           }
         );
 
@@ -300,12 +306,28 @@ const favoriteMutation =
     },
 
     onSuccess: () => {
-      queryClient
-        .invalidateQueries({
-          queryKey: [
-            'crm-customers',
-          ],
-        });
+      queryClient.invalidateQueries({
+        queryKey: [
+          'crm-customers',
+        ],
+      });
+    },
+
+    onError: (
+      error,
+      variables
+    ) => {
+      if (
+        error?.message ===
+        'UNAUTHORIZED'
+      ) {
+        setPendingFavoriteRow(
+          variables?.row || null
+        );
+
+        setAuthError('');
+        setAuthOpen(true);
+      }
     },
   });
 
