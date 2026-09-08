@@ -331,23 +331,119 @@ const favoriteMutation =
     },
   });
 
-const toggleFavorite =
-  (row) => {
-    const telegramId =
-      String(
-        row?.telegramId || ''
-      ).trim();
+const toggleFavorite = (row) => {
+  const telegramId =
+    String(
+      row?.telegramId || ''
+    ).trim();
 
-    if (!telegramId) {
+  if (!telegramId) {
+    return;
+  }
+
+  favoriteMutation.mutate({
+    telegramId,
+    isFavorite:
+      !row.isFavorite,
+    row,
+  });
+};
+
+const submitCrmAuth =
+  async (event) => {
+    event?.preventDefault?.();
+
+    if (
+      !authPassword ||
+      authLoading
+    ) {
       return;
     }
 
-    favoriteMutation.mutate({
-      telegramId,
+    setAuthLoading(true);
+    setAuthError('');
 
-      isFavorite:
-        !row.isFavorite,
-    });
+    try {
+      const response =
+        await fetch(
+          `${CRM_API_URL}/crm/auth/login`,
+          {
+            method: 'POST',
+            credentials:
+              'include',
+
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+
+            body:
+              JSON.stringify({
+                password:
+                  authPassword,
+              }),
+          }
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(() => ({}));
+
+      if (
+        !response.ok ||
+        result?.ok === false
+      ) {
+        throw new Error(
+          result?.error ||
+            'AUTH_FAILED'
+        );
+      }
+
+      if (
+        result?.sessionToken
+      ) {
+        sessionStorage.setItem(
+          'elfduck_crm_session',
+          result.sessionToken
+        );
+      }
+
+      const row =
+        pendingFavoriteRow;
+
+      setAuthOpen(false);
+      setAuthPassword('');
+      setPendingFavoriteRow(
+        null
+      );
+
+      // Повторяем нажатие ★
+      // после успешного входа.
+      if (row) {
+        favoriteMutation.mutate({
+          telegramId:
+            String(
+              row?.telegramId ||
+                ''
+            ).trim(),
+
+          isFavorite:
+            !row.isFavorite,
+
+          row,
+        });
+      }
+    } catch (error) {
+      setAuthError(
+        error?.message ===
+          'INVALID_CRM_PASSWORD'
+          ? 'Неверный пароль'
+          : 'Не удалось авторизоваться'
+      );
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
 const pageRows =
@@ -575,6 +671,71 @@ const summary = [
           onPageChange={setPage}
         />
       </div>
+      {authOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+    <form
+      onSubmit={submitCrmAuth}
+      className="w-full max-w-sm rounded-2xl border border-border bg-[hsl(232_26%_7%)] p-5 shadow-2xl"
+    >
+      <div className="text-base font-semibold text-foreground">
+        Авторизация CRM
+      </div>
+
+      <div className="mt-1 text-[12px] text-muted-2">
+        Введите пароль, чтобы изменять избранных клиентов.
+      </div>
+
+      <input
+        autoFocus
+        type="password"
+        value={authPassword}
+        onChange={(e) =>
+          setAuthPassword(
+            e.target.value
+          )
+        }
+        placeholder="Пароль"
+        className="mt-4 h-10 w-full rounded-lg border border-border bg-[hsl(232_26%_6%)] px-3 text-[13px] text-foreground outline-none"
+      />
+
+      {authError && (
+        <div className="mt-2 text-[12px] text-red-400">
+          {authError}
+        </div>
+      )}
+
+      <div className="mt-4 flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setAuthOpen(false);
+            setAuthPassword('');
+            setAuthError('');
+            setPendingFavoriteRow(
+              null
+            );
+          }}
+          className="h-9 rounded-lg border border-border px-3 text-[12px]"
+        >
+          Отмена
+        </button>
+
+        <button
+          type="submit"
+          disabled={
+            authLoading ||
+            !authPassword
+          }
+          className="h-9 rounded-lg bg-[hsl(255_100%_68%)] px-4 text-[12px] font-semibold text-white disabled:opacity-50"
+        >
+          {authLoading
+            ? 'Вход…'
+            : 'Войти'}
+        </button>
+      </div>
+    </form>
+  </div>
+)}
     </div>
   );
 }
