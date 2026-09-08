@@ -8,21 +8,46 @@ export default function PeriodControl() {
   const { period, setPeriod, setCustomRange } = usePeriod();
   const [draftStart, setDraftStart] = useState('');
   const [draftEnd, setDraftEnd] = useState('');
+  const [customOpen, setCustomOpen] = useState(false);
 
-  const applyCustom = () => {
-    if (!draftStart || !draftEnd) return;
-    const start = new Date(draftStart + 'T00:00:00');
-    const end = new Date(draftEnd + 'T23:59:59');
-    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return;
-    setCustomRange({ start, end });
-  };
+const applyCustom = () => {
+  if (!draftStart || !draftEnd) return;
 
-  const closeCustom = () => {
-    setDraftStart('');
-    setDraftEnd('');
-    setCustomRange(null);
-    setPeriod('Месяц');
-  };
+  const start = new Date(
+    draftStart + 'T00:00:00'
+  );
+
+  const end = new Date(
+    draftEnd + 'T23:59:59'
+  );
+
+  if (
+    isNaN(start.getTime()) ||
+    isNaN(end.getTime()) ||
+    start > end
+  ) {
+    return;
+  }
+
+  setCustomRange({
+    start,
+    end,
+  });
+
+  setCustomOpen(false);
+};
+
+  setCustomOpen(false);
+
+  setDraftStart('');
+
+  setDraftEnd('');
+
+  setCustomRange(null);
+
+  setPeriod('Месяц');
+
+};
 
   return (
     <div className="relative w-full lg:w-auto">
@@ -30,7 +55,17 @@ export default function PeriodControl() {
         {periodOptions.map((p) => (
           <button
             key={p}
-            onClick={() => setPeriod(p)}
+            onClick={() => {
+  setPeriod(p);
+
+  if (
+    p === 'Свой период'
+  ) {
+    setCustomOpen(true);
+  } else {
+    setCustomOpen(false);
+  }
+}}
             className={cn(
               'shrink-0 whitespace-nowrap rounded-md px-2 py-1.5 text-[11px] font-medium transition-all sm:px-2.5 sm:py-1.5 sm:text-[12px]',
               period === p
@@ -43,7 +78,9 @@ export default function PeriodControl() {
         ))}
       </div>
 
-      {period === 'Свой период' && (
+      {period === 'Свой период' &&
+
+  customOpen && (
         <div className="absolute right-0 top-full z-30 mt-2 w-[340px] max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-[hsl(232_26%_8%)] p-3 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.85)]">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
