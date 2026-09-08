@@ -10,44 +10,40 @@ export default function PeriodControl() {
   const [draftEnd, setDraftEnd] = useState('');
   const [customOpen, setCustomOpen] = useState(false);
 
-const applyCustom = () => {
-  if (!draftStart || !draftEnd) return;
+  const applyCustom = () => {
+    if (!draftStart || !draftEnd) return;
 
-  const start = new Date(
-    draftStart + 'T00:00:00'
-  );
+    const start = new Date(
+      draftStart + 'T00:00:00'
+    );
 
-  const end = new Date(
-    draftEnd + 'T23:59:59'
-  );
+    const end = new Date(
+      draftEnd + 'T23:59:59'
+    );
 
-  if (
-    isNaN(start.getTime()) ||
-    isNaN(end.getTime()) ||
-    start > end
-  ) {
-    return;
-  }
+    if (
+      isNaN(start.getTime()) ||
+      isNaN(end.getTime()) ||
+      start > end
+    ) {
+      return;
+    }
 
-  setCustomRange({
-    start,
-    end,
-  });
+    setCustomRange({
+      start,
+      end,
+    });
 
-  setCustomOpen(false);
-};
+    setCustomOpen(false);
+  };
 
-  setCustomOpen(false);
-
-  setDraftStart('');
-
-  setDraftEnd('');
-
-  setCustomRange(null);
-
-  setPeriod('Месяц');
-
-};
+  const closeCustom = () => {
+    setCustomOpen(false);
+    setDraftStart('');
+    setDraftEnd('');
+    setCustomRange(null);
+    setPeriod('Месяц');
+  };
 
   return (
     <div className="relative w-full lg:w-auto">
