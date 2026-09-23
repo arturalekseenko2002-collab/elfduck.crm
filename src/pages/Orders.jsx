@@ -453,15 +453,15 @@ export default function Orders() {
       ),
     },
 
-    {
-      key: 'delivery',
-      header: 'Доставка',
-      render: (r) => (
-        <span className="text-muted-foreground">
-          {r.delivery}
-        </span>
-      ),
-    },
+    // {
+    //   key: 'delivery',
+    //   header: 'Доставка',
+    //   render: (r) => (
+    //     <span className="text-muted-foreground">
+    //       {r.delivery}
+    //     </span>
+    //   ),
+    // },
 
     {
       key: 'location',
@@ -646,25 +646,21 @@ function OrderMobileRow({
 
       <div className="mt-3 border-t border-border-soft pt-3">
 
-        <MetricGrid
-          cols={3}
-          items={[
-            {
-              label: 'Сумма',
-              value: `${r.amount} zł`,
-              className:
-                'text-foreground',
-            },
-            {
-              label: 'Оплата',
-              value: r.payment,
-            },
-            {
-              label: 'Доставка',
-              value: r.delivery,
-            },
-          ]}
-        />
+      <MetricGrid
+        cols={2}
+        items={[
+          {
+            label: 'Сумма',
+            value: `${r.amount} zł`,
+            className:
+              'text-foreground',
+          },
+          {
+            label: 'Оплата',
+            value: r.payment,
+          },
+        ]}
+      />
 
         <div className="mt-2 text-[11px] text-muted-2">
           Точка:{' '}
