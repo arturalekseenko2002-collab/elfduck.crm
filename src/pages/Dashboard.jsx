@@ -181,8 +181,13 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Пока остаётся mock */}
-      <InsightsRow />
+      <InsightsRow
+
+        data={data}
+
+        loading={isLoading}
+
+      />
 
       {/* Row 3 — Dynamics + Retention */}
       <div className="grid grid-cols-12 gap-5">
