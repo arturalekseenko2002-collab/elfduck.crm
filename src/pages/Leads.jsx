@@ -588,17 +588,16 @@ export default function Leads() {
                             header
                           }
 
-                          className={
-                            cn(
-                              'px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-muted-2',
-
-                              index >=
-                                2 &&
-                                index <=
-                                  3 &&
-                                'text-right'
-                            )
-                          }
+className={
+  cn(
+    'px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-muted-2',
+    index === 0 && 'text-left',
+    index === 1 && 'text-left',
+    index === 2 && 'text-right',
+    index === 3 && 'text-right',
+    index === 4 && 'text-left'
+  )
+}
                         >
                           {
                             header
