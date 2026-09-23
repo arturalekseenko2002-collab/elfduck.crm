@@ -556,7 +556,20 @@ export default function Leads() {
             !isError &&
             rows.length >
               0 && (
-              <table className="w-full min-w-[640px] border-collapse text-[13px]">
+              <table className="w-full min-w-[640px] table-fixed border-collapse text-[13px]">
+                <colgroup>
+
+                  <col className="w-[30%]" />
+
+                  <col className="w-[17%]" />
+
+                  <col className="w-[17%]" />
+
+                  <col className="w-[18%]" />
+
+                  <col className="w-[18%]" />
+
+                </colgroup>
                 <thead>
                   <tr className="border-b border-border">
                     {[
